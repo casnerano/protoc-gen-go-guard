@@ -5,18 +5,18 @@ import (
 	"fmt"
 	"path"
 
-	"github.com/casnerano/protoc-gen-go-rbac/pkg/rbac"
+	"github.com/casnerano/protoc-gen-go-guard/pkg/guard"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
-type rbacServiceProvider interface {
-	GetRBACService() *rbac.Service
+type guardServiceProvider interface {
+	GetGuardService() *guard.Service
 }
 
 type evaluator interface {
-	Evaluate(ctx context.Context, rules *rbac.Rules, authContext *AuthContext, request any) (bool, error)
+	Evaluate(ctx context.Context, rules *guard.Rules, authContext *AuthContext, request any) (bool, error)
 }
 
 type AuthContext struct {
@@ -27,11 +27,11 @@ type AuthContext struct {
 
 type AuthContextResolver func(ctx context.Context) (*AuthContext, error)
 
-func RbacUnary(authContextResolver AuthContextResolver, opts ...Option) grpc.UnaryServerInterceptor {
-	rbacOptions := &options{}
+func GuardUnary(authContextResolver AuthContextResolver, opts ...Option) grpc.UnaryServerInterceptor {
+	guardOptions := &options{}
 
 	for _, opt := range opts {
-		opt(rbacOptions)
+		opt(guardOptions)
 	}
 
 	evaluators := map[evaluatorType]evaluator{
@@ -40,13 +40,13 @@ func RbacUnary(authContextResolver AuthContextResolver, opts ...Option) grpc.Una
 		evaluatorTypeRoleBased:    newRoleBasedEvaluator(),
 	}
 
-	if rbacOptions.policies != nil {
-		evaluators[evaluatorTypePolicyBased] = newPolicyBasedEvaluator(rbacOptions.policies)
+	if guardOptions.policies != nil {
+		evaluators[evaluatorTypePolicyBased] = newPolicyBasedEvaluator(guardOptions.policies)
 	}
 
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
-		if provider, ok := info.Server.(rbacServiceProvider); ok {
-			rules := findRulesForService(provider.GetRBACService(), info.FullMethod)
+		if provider, ok := info.Server.(guardServiceProvider); ok {
+			rules := findRulesForService(provider.GetGuardService(), info.FullMethod)
 
 			if rules == nil {
 				return nil, status.Error(codes.PermissionDenied, codes.PermissionDenied.String())
@@ -84,7 +84,7 @@ func RbacUnary(authContextResolver AuthContextResolver, opts ...Option) grpc.Una
 	}
 }
 
-func findRulesForService(service *rbac.Service, fullMethod string) *rbac.Rules {
+func findRulesForService(service *guard.Service, fullMethod string) *guard.Rules {
 	if service == nil {
 		return nil
 	}

@@ -7,15 +7,15 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/casnerano/protoc-gen-go-rbac/pkg/rbac"
-	desc "github.com/casnerano/protoc-gen-go-rbac/proto"
+	"github.com/casnerano/protoc-gen-go-guard/pkg/guard"
+	desc "github.com/casnerano/protoc-gen-go-guard/proto"
 	"google.golang.org/protobuf/compiler/protogen"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/descriptorpb"
 )
 
 const (
-	outputFileSuffix = ".rbac.go"
+	outputFileSuffix = ".guard.go"
 )
 
 //go:embed plugin.go.tmpl
@@ -24,7 +24,7 @@ var templateFS embed.FS
 type TemplateData struct {
 	Meta     Meta
 	File     File
-	Services []*rbac.Service
+	Services []*guard.Service
 
 	Test string
 }
@@ -84,10 +84,10 @@ func Execute(plugin *protogen.Plugin) error {
 	return nil
 }
 
-func collectServices(protoServices []*protogen.Service) []*rbac.Service {
-	var services []*rbac.Service
+func collectServices(protoServices []*protogen.Service) []*guard.Service {
+	var services []*guard.Service
 	for _, protoService := range protoServices {
-		service := rbac.Service{
+		service := guard.Service{
 			Name: string(protoService.Desc.Name()),
 		}
 
@@ -111,13 +111,13 @@ func collectServices(protoServices []*protogen.Service) []*rbac.Service {
 	return services
 }
 
-func collectMethods(protoMethods []*protogen.Method) map[string]*rbac.Method {
-	methods := make(map[string]*rbac.Method)
+func collectMethods(protoMethods []*protogen.Method) map[string]*guard.Method {
+	methods := make(map[string]*guard.Method)
 
 	for _, protoMethod := range protoMethods {
 		if options := protoMethod.Desc.Options().(*descriptorpb.MethodOptions); options != nil {
 			if protoMethodRules := proto.GetExtension(options, desc.E_MethodRules).(*desc.Rules); protoMethodRules != nil {
-				methods[string(protoMethod.Desc.Name())] = &rbac.Method{
+				methods[string(protoMethod.Desc.Name())] = &guard.Method{
 					Rules: extractSelectedRules(protoMethodRules),
 				}
 			}
@@ -127,39 +127,39 @@ func collectMethods(protoMethods []*protogen.Method) map[string]*rbac.Method {
 	return methods
 }
 
-func extractSelectedRules(descRules *desc.Rules) *rbac.Rules {
-	rbacRules := rbac.Rules{}
+func extractSelectedRules(descRules *desc.Rules) *guard.Rules {
+	guardRules := guard.Rules{}
 
 	switch selectedRules := descRules.OneOf.(type) {
 	case *desc.Rules_AllowPublic:
-		rbacRules.AllowPublic = &selectedRules.AllowPublic
+		guardRules.AllowPublic = &selectedRules.AllowPublic
 	case *desc.Rules_RequireAuthentication:
-		rbacRules.RequireAuthn = &selectedRules.RequireAuthentication
+		guardRules.RequireAuthn = &selectedRules.RequireAuthentication
 	case *desc.Rules_RoleBased:
 		if selectedRules.RoleBased != nil {
-			rbacRules.RoleBased = &rbac.RoleBased{
+			guardRules.RoleBased = &guard.RoleBased{
 				AllowedRoles: selectedRules.RoleBased.AllowedRoles,
-				Requirement:  rbac.RequirementAny,
+				Requirement:  guard.RequirementAny,
 			}
 
 			if requirement := selectedRules.RoleBased.Requirement; requirement != nil {
-				rbacRules.RoleBased.Requirement = rbac.Requirement(*requirement)
+				guardRules.RoleBased.Requirement = guard.Requirement(*requirement)
 			}
 		}
 	case *desc.Rules_PolicyBased:
 		if selectedRules.PolicyBased != nil {
-			rbacRules.PolicyBased = &rbac.PolicyBased{
+			guardRules.PolicyBased = &guard.PolicyBased{
 				PolicyNames: selectedRules.PolicyBased.PolicyNames,
-				Requirement: rbac.RequirementAll,
+				Requirement: guard.RequirementAll,
 			}
 
 			if requirement := selectedRules.PolicyBased.Requirement; requirement != nil {
-				rbacRules.PolicyBased.Requirement = rbac.Requirement(*requirement)
+				guardRules.PolicyBased.Requirement = guard.Requirement(*requirement)
 			}
 		}
 	}
 
-	return &rbacRules
+	return &guardRules
 }
 
 func parseTemplate() (*template.Template, error) {
@@ -168,7 +168,7 @@ func parseTemplate() (*template.Template, error) {
 		return nil, fmt.Errorf("failed to read template: %w", err)
 	}
 
-	tmpl := template.New("plugin.rbac").
+	tmpl := template.New("plugin.guard").
 		Funcs(template.FuncMap{
 			"toLower": strings.ToLower,
 		})

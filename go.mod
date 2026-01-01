@@ -1,4 +1,4 @@
-module github.com/casnerano/protoc-gen-go-rbac
+module github.com/casnerano/protoc-gen-go-guard
 
 go 1.25.1
 

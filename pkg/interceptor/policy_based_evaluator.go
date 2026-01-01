@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/casnerano/protoc-gen-go-rbac/pkg/rbac"
+	"github.com/casnerano/protoc-gen-go-guard/pkg/guard"
 )
 
 type (
@@ -22,7 +22,7 @@ func newPolicyBasedEvaluator(policies Policies) *policyBasedEvaluator {
 	}
 }
 
-func (e policyBasedEvaluator) Evaluate(ctx context.Context, rules *rbac.Rules, authContext *AuthContext, request any) (bool, error) {
+func (e policyBasedEvaluator) Evaluate(ctx context.Context, rules *guard.Rules, authContext *AuthContext, request any) (bool, error) {
 	if rules.PolicyBased == nil {
 		return false, nil
 	}
@@ -34,7 +34,7 @@ func (e policyBasedEvaluator) Evaluate(ctx context.Context, rules *rbac.Rules, a
 	}
 
 	switch rules.PolicyBased.Requirement {
-	case rbac.RequirementAny:
+	case guard.RequirementAny:
 		for _, policy := range rules.PolicyBased.PolicyNames {
 			result, err := e.policies[policy](ctx, authContext, request)
 			if err != nil {
@@ -46,7 +46,7 @@ func (e policyBasedEvaluator) Evaluate(ctx context.Context, rules *rbac.Rules, a
 			}
 		}
 		return false, nil
-	case rbac.RequirementAll:
+	case guard.RequirementAll:
 		for _, policy := range rules.PolicyBased.PolicyNames {
 			result, err := e.policies[policy](ctx, authContext, request)
 			if err != nil {
