@@ -4,7 +4,7 @@ import (
 	"context"
 	"net"
 
-	"github.com/casnerano/protoc-gen-go-rbac/pkg/interceptor"
+	"github.com/casnerano/protoc-gen-go-guard/pkg/interceptor"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -25,7 +25,7 @@ func (g *CornerCasesServerTestSuite) SetupSuite() {
 
 	g.server = grpc.NewServer(
 		grpc.UnaryInterceptor(
-			interceptor.RbacUnary(
+			interceptor.GuardUnary(
 				testAuthContextResolver(),
 				interceptor.WithPolicies(testPolicies()),
 			),

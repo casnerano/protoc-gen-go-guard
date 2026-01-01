@@ -1,10 +1,10 @@
-# protoc-gen-go-rbac
+# protoc-gen-go-guard
 
-A protoc plugin that generates gRPC RBAC middleware from proto annotations.
+A protoc plugin that generates gRPC Guard middleware from proto annotations.
 
 ## Features
 
-- Define RBAC rules directly in `.proto` files
+- Define Guard rules directly in `.proto` files
 - Support for public, authenticated, role-based, and policy-based access
 - Zero-trust default (deny all unless explicitly allowed)
 - Service-level and method-level rule inheritance
@@ -13,16 +13,16 @@ A protoc plugin that generates gRPC RBAC middleware from proto annotations.
 
 1. Install the plugin:
 ```sh
-go install github.com/casnerano/protoc-gen-go-rbac/cmd/protoc-gen-go-rbac@latest
+go install github.com/casnerano/protoc-gen-go-guard/cmd/protoc-gen-go-guard@latest
 ```
 
 2. Add to your build:
 ```yaml
 # buf.yaml
 plugins:
-  - name: rbac
+  - name: guard
     out: .
-    path: protoc-gen-go-rbac
+    path: protoc-gen-go-guard
 ```
 
 ## Usage
@@ -30,10 +30,10 @@ plugins:
 ### 1. Annotate your proto
 ```protobuf
 service UserService {
-  option (rbac.service_rules).allow_authenticated = true;
+  option (guard.service_rules).allow_authenticated = true;
   
   rpc GetUser(GetRequest) returns (User) {
-    option (rbac.method_rules).role_based = {
+    option (guard.method_rules).role_based = {
       allowed_roles: ["admin", "support"],
       requirement: ANY
     };
@@ -44,13 +44,13 @@ service UserService {
 ### 2. Configure interceptor
 ```go
 server := grpc.NewServer(
-  grpc.UnaryInterceptor(rbac.Interceptor(
-    func(ctx context.Context) (*rbac.AuthContext, error) {
+  grpc.UnaryInterceptor(guard.Interceptor(
+    func(ctx context.Context) (*guard.AuthContext, error) {
       // Extract user claims
-      return &rbac.AuthContext{Roles: []string{"admin"}}, nil
+      return &guard.AuthContext{Roles: []string{"admin"}}, nil
     },
-    rbac.WithPolicies(map[string]rbac.Policy{
-      "owner": func(ctx context.Context, auth *rbac.AuthContext, req any) (bool, error) {
+    guard.WithPolicies(map[string]guard.Policy{
+      "owner": func(ctx context.Context, auth *guard.AuthContext, req any) (bool, error) {
         // Custom policy logic
         return true, nil
       }

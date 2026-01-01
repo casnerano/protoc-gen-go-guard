@@ -3,7 +3,7 @@ package demo
 import (
 	"context"
 
-	desc "github.com/casnerano/protoc-gen-go-rbac/example/pb/demo"
+	desc "github.com/casnerano/protoc-gen-go-guard/example/pb/demo"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 

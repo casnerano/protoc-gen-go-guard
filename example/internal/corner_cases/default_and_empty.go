@@ -3,7 +3,7 @@ package corner_cases
 import (
 	"context"
 
-	"github.com/casnerano/protoc-gen-go-rbac/example/pb/corner_cases"
+	"github.com/casnerano/protoc-gen-go-guard/example/pb/corner_cases"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 

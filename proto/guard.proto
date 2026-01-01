@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-package protoc_gen_go_rbac;
+package guard;
 
-option go_package = "github.com/casnerano/protoc-gen-go-rbac/proto;rbac";
+option go_package = "github.com/casnerano/protoc-gen-go-guard/proto;guard";
 
 import "google/protobuf/descriptor.proto";
 

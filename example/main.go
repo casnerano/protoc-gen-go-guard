@@ -6,9 +6,9 @@ import (
 	"net"
 	"strings"
 
-	"github.com/casnerano/protoc-gen-go-rbac/example/internal/demo"
-	desc "github.com/casnerano/protoc-gen-go-rbac/example/pb/demo"
-	"github.com/casnerano/protoc-gen-go-rbac/pkg/interceptor"
+	"github.com/casnerano/protoc-gen-go-guard/example/internal/demo"
+	desc "github.com/casnerano/protoc-gen-go-guard/example/pb/demo"
+	"github.com/casnerano/protoc-gen-go-guard/pkg/interceptor"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/reflection"
@@ -56,7 +56,7 @@ func main() {
 
 	server := grpc.NewServer(
 		grpc.UnaryInterceptor(
-			interceptor.RbacUnary(
+			interceptor.GuardUnary(
 				createAuthResolver(),
 				interceptor.WithPolicies(buildPolicies()),
 				interceptor.WithDebug(),

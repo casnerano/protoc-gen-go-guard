@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/casnerano/protoc-gen-go-rbac/pkg/rbac"
+	"github.com/casnerano/protoc-gen-go-guard/pkg/guard"
 )
 
 type roleBasedEvaluator struct{}
@@ -13,7 +13,7 @@ func newRoleBasedEvaluator() *roleBasedEvaluator {
 	return &roleBasedEvaluator{}
 }
 
-func (e roleBasedEvaluator) Evaluate(_ context.Context, rules *rbac.Rules, authContext *AuthContext, _ any) (bool, error) {
+func (e roleBasedEvaluator) Evaluate(_ context.Context, rules *guard.Rules, authContext *AuthContext, _ any) (bool, error) {
 	if !authContext.Authenticated {
 		return false, nil
 	}
@@ -23,7 +23,7 @@ func (e roleBasedEvaluator) Evaluate(_ context.Context, rules *rbac.Rules, authC
 	}
 
 	switch rules.RoleBased.Requirement {
-	case rbac.RequirementAny:
+	case guard.RequirementAny:
 		for _, allowedRole := range rules.RoleBased.AllowedRoles {
 			for _, authRole := range authContext.Roles {
 				if authRole == allowedRole {
@@ -32,12 +32,12 @@ func (e roleBasedEvaluator) Evaluate(_ context.Context, rules *rbac.Rules, authC
 			}
 		}
 		return false, nil
-	case rbac.RequirementAll:
+	case guard.RequirementAll:
 		authContextRolesSet := make(map[string]struct{})
 		for _, authRole := range authContext.Roles {
 			authContextRolesSet[authRole] = struct{}{}
 		}
-		
+
 		for _, requiredRole := range rules.RoleBased.AllowedRoles {
 			if _, exists := authContextRolesSet[requiredRole]; !exists {
 				return false, nil

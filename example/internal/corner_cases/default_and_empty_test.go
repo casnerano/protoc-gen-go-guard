@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	desc "github.com/casnerano/protoc-gen-go-rbac/example/pb/corner_cases"
+	desc "github.com/casnerano/protoc-gen-go-guard/example/pb/corner_cases"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

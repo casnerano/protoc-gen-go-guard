@@ -1,7 +1,7 @@
 package interceptor
 
 import (
-	"github.com/casnerano/protoc-gen-go-rbac/pkg/rbac"
+	"github.com/casnerano/protoc-gen-go-guard/pkg/guard"
 )
 
 type evaluatorType int
@@ -14,7 +14,7 @@ const (
 	evaluatorTypePolicyBased
 )
 
-func getEvaluatorType(rules *rbac.Rules) evaluatorType {
+func getEvaluatorType(rules *guard.Rules) evaluatorType {
 	switch {
 	case rules.AllowPublic != nil:
 		return evaluatorTypeAllowPublic
