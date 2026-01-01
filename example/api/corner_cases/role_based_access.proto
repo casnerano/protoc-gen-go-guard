@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+package example.corner_cases;
+
+option go_package = "github.com/casnerano/protoc-gen-go-rbac/example/pb/corner_cases";
+
+import "google/protobuf/empty.proto";
+import "proto/rbac.proto";
+
+service RoleBasedAccess {
+  rpc EmptyRolesWithAnyRequirement(google.protobuf.Empty) returns (google.protobuf.Empty) {
+    option (protoc_gen_go_rbac.method_rules).role_based = {
+      allowed_roles: [],
+      requirement: ANY
+    };
+  };
+
+  rpc EmptyRolesWithAllRequirement(google.protobuf.Empty) returns (google.protobuf.Empty) {
+    option (protoc_gen_go_rbac.method_rules).role_based = {
+      allowed_roles: [],
+      requirement: ALL
+    };
+  };
+
+  rpc MultipleRolesWithAnyRequirement(google.protobuf.Empty) returns (google.protobuf.Empty) {
+    option (protoc_gen_go_rbac.method_rules).role_based = {
+      allowed_roles: ["admin", "manager"],
+      requirement: ANY
+    };
+  };
+
+  rpc MultipleRolesWithAllRequirement(google.protobuf.Empty) returns (google.protobuf.Empty) {
+    option (protoc_gen_go_rbac.method_rules).role_based = {
+      allowed_roles: ["admin", "manager"],
+      requirement: ALL
+    };
+  };
+}

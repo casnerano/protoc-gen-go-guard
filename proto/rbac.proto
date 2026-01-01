@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+package protoc_gen_go_rbac;
+
+option go_package = "github.com/casnerano/protoc-gen-go-rbac/proto;rbac";
+
+import "google/protobuf/descriptor.proto";
+
+enum Requirement {
+  ANY = 0;
+  ALL = 1;
+}
+
+message RoleBased {
+  repeated string allowed_roles = 1;
+  optional Requirement requirement = 2;
+}
+message PolicyBased {
+  repeated string policy_names = 1;
+  optional Requirement requirement = 2;
+}
+
+message Rules {
+  oneof OneOf {
+    bool allow_public = 1;
+    bool require_authentication = 2;
+    RoleBased role_based = 3;
+    PolicyBased policy_based = 4;
+  }
+}
+
+extend google.protobuf.ServiceOptions {
+  Rules service_rules = 50001;
+}
+
+extend google.protobuf.MethodOptions {
+  Rules method_rules = 50002;
+}

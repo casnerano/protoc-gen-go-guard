@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package example.demo;
+
+option go_package = "github.com/casnerano/protoc-gen-go-rbac/example/pb/demo";
+
+import "google/protobuf/empty.proto";
+import "proto/rbac.proto";
+
+service Auth {
+  // Service is public by default
+  option (protoc_gen_go_rbac.service_rules) = {};
+
+  // Inherits service rules (public access)
+  rpc Register(google.protobuf.Empty) returns (google.protobuf.Empty);
+
+  // Inherits service rules (public access)
+  rpc Login(google.protobuf.Empty) returns (google.protobuf.Empty);
+
+  // Overrides service rules - requires authentication
+  rpc Logout(google.protobuf.Empty) returns (google.protobuf.Empty) {
+    option (protoc_gen_go_rbac.method_rules).require_authentication = true;
+  }
+}

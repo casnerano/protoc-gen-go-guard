@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+package example.demo;
+
+option go_package = "github.com/casnerano/protoc-gen-go-rbac/example/pb/demo";
+
+import "google/protobuf/empty.proto";
+import "proto/rbac.proto";
+
+service User {
+  // Service requires authentication by default
+  option (protoc_gen_go_rbac.service_rules).require_authentication = true;
+
+  // Overrides service rules - makes method public
+  rpc GetPublicProfile(google.protobuf.Empty) returns (google.protobuf.Empty) {
+    option (protoc_gen_go_rbac.method_rules).allow_public = true;
+  }
+
+  // Inherits service rules (requires authentication)
+  rpc GetPrivateProfile(google.protobuf.Empty) returns (google.protobuf.Empty);
+
+  // Overrides service rules - requires ANY matching policy
+  rpc UpdateProfileStatus(google.protobuf.Empty) returns (google.protobuf.Empty) {
+    option (protoc_gen_go_rbac.method_rules).policy_based = {
+      policy_names: ["demo-period", "premium"],
+      requirement: ANY
+    };
+  }
+
+  // Overrides service rules - requires ALL specified roles
+  rpc DeleteProfile(google.protobuf.Empty) returns (google.protobuf.Empty) {
+    option (protoc_gen_go_rbac.method_rules).role_based = {
+      allowed_roles: ["user", "verified"],
+      requirement: ALL
+    };
+  }
+}

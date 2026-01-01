@@ -1,0 +1,7 @@
+version: v2
+plugins:
+  - local: bin/protoc-gen-go
+    out: .
+    strategy: directory
+    opt:
+      - module=github.com/casnerano/protoc-gen-go-rbac
