@@ -14,8 +14,10 @@ var guardService_InheritAndOverrideOne = guard.Service{
 	Name: "InheritAndOverrideOne",
 	Methods: map[string]*guard.Method{
 		"OverriddenMethod": {
-			Rules: &guard.Rules{
-				AllowPublic: guard.Ptr(true),
+			Rules: []*guard.Rule{
+				{
+					AllowPublic: guard.Ptr(true),
+				},
 			},
 		},
 	},
@@ -27,13 +29,17 @@ func (UnimplementedInheritAndOverrideOneServer) GetGuardService() *guard.Service
 
 var guardService_InheritAndOverrideTwo = guard.Service{
 	Name: "InheritAndOverrideTwo",
-	Rules: &guard.Rules{
-		AllowPublic: guard.Ptr(true),
+	Rules: []*guard.Rule{
+		{
+			AllowPublic: guard.Ptr(true),
+		},
 	},
 	Methods: map[string]*guard.Method{
 		"OverriddenMethod": {
-			Rules: &guard.Rules{
-				AllowPublic: guard.Ptr(false),
+			Rules: []*guard.Rule{
+				{
+					AllowPublic: guard.Ptr(false),
+				},
 			},
 		},
 	},

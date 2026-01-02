@@ -10,87 +10,66 @@ import (
     "github.com/casnerano/protoc-gen-go-guard/pkg/guard"
 )
 
+{{ define "guard-rule" -}}
+{
+    {{- if .AllowPublic }}
+        AllowPublic: guard.Ptr({{ .AllowPublic }}),
+    {{- else if .RequireAuthentication }}
+        RequireAuthentication: guard.Ptr({{ .RequireAuthentication }}),
+    {{- else if .AuthenticatedAccess }}
+        AuthenticatedAccess: &guard.AuthenticatedAccess{
+            {{- if .AuthenticatedAccess.RoleBased }}
+                RoleBased: &guard.RoleBased{
+                    Roles: []string{
+                        {{- range .AuthenticatedAccess.RoleBased.Roles -}}
+                            "{{ . | toLower }}",
+                        {{- end -}}
+                    },
+                    {{- if .AuthenticatedAccess.RoleBased.Match }}
+                        Match: guard.Match({{ .AuthenticatedAccess.RoleBased.Match }}),
+                    {{- else }}
+                        Match: guard.MatchAtLeastOne,
+                    {{- end }}
+                },
+            {{- end }}
+            {{- if .AuthenticatedAccess.PolicyBased }}
+            PolicyBased: &guard.PolicyBased{
+                Policies: []string{
+                    {{- range .AuthenticatedAccess.PolicyBased.Policies -}}
+                        "{{ . }}",
+                    {{- end -}}
+                },
+                {{- if .AuthenticatedAccess.PolicyBased.Match }}
+                    Match: guard.Match({{ .AuthenticatedAccess.PolicyBased.Match }}),
+                {{- else }}
+                    Match: guard.MatchAtLeastOne,
+                {{- end }}
+            },
+            {{- end }}
+        },
+    {{- end }}
+}
+{{- end }}
+
+{{ define "guard-rules" -}}
+    []*guard.Rule{
+        {{- range . }}
+            {{ template "guard-rule" . }},
+        {{- end }}
+    }
+{{- end }}
+
 {{- range .Services }}
     var guardService_{{ .Name }} = guard.Service{
         Name: "{{ .Name }}",
         {{- if .Rules }}
-            Rules: &guard.Rules{
-                {{- if .Rules.AllowPublic }}
-                    AllowPublic: guard.Ptr({{ .Rules.AllowPublic }}),
-                {{- end }}
-                {{- if .Rules.RequireAuthn }}
-                    RequireAuthn: guard.Ptr({{ .Rules.RequireAuthn }}),
-                {{- end }}
-                {{- if .Rules.RoleBased }}
-                    RoleBased: &guard.RoleBased{
-                        {{- if .Rules.RoleBased.AllowedRoles }}
-                            AllowedRoles: []string{
-                                {{- range $i, $role := .Rules.RoleBased.AllowedRoles }}
-                                    "{{ $role | toLower }}",
-                                {{- end }}
-                            },
-                            {{- if .Rules.RoleBased.Requirement }}
-                                Requirement: guard.Requirement({{ .Rules.RoleBased.Requirement }}),
-                            {{- end }}
-                        {{- end }}
-                    },
-                {{- end }}
-                {{- if .Rules.PolicyBased }}
-                    PolicyBased: &guard.PolicyBased{
-                        {{- if .Rules.PolicyBased.PolicyNames }}
-                            PolicyNames: []string{
-                                {{- range $i, $policy := .Rules.PolicyBased.PolicyNames }}
-                                    "{{ $policy }}",
-                                {{- end }}
-                            },
-                            {{- if .Rules.PolicyBased.Requirement }}
-                                Requirement: guard.Requirement({{ .Rules.PolicyBased.Requirement }}),
-                            {{- end }}
-                        {{- end }}
-                    },
-                {{- end }}
-            },
+            Rules: {{ template "guard-rules" .Rules }},
         {{- end }}
         Methods: map[string]*guard.Method{
             {{- range $name, $method := .Methods }}
-            "{{ $name }}": {
-                Rules: &guard.Rules{
-                    {{- if $method.Rules.AllowPublic }}
-                        AllowPublic: guard.Ptr({{ $method.Rules.AllowPublic }}),
-                    {{- end }}
-                    {{- if $method.Rules.RequireAuthn }}
-                        RequireAuthn: guard.Ptr({{ $method.Rules.RequireAuthn }}),
-                    {{- end }}
-                    {{- if $method.Rules.RoleBased }}
-                        RoleBased: &guard.RoleBased{
-                            {{- if $method.Rules.RoleBased.AllowedRoles }}
-                                AllowedRoles: []string{
-                                    {{- range $j, $role := $method.Rules.RoleBased.AllowedRoles }}
-                                        "{{ $role | toLower }}",
-                                    {{- end }}
-                                },
-                                {{- if $method.Rules.RoleBased.Requirement }}
-                                    Requirement: guard.Requirement({{ $method.Rules.RoleBased.Requirement }}),
-                                {{- end }}
-                            {{- end }}
-                        },
-                    {{- end }}
-                    {{- if $method.Rules.PolicyBased }}
-                        PolicyBased: &guard.PolicyBased{
-                            {{- if $method.Rules.PolicyBased.PolicyNames }}
-                                PolicyNames: []string{
-                                    {{- range $k, $policy := $method.Rules.PolicyBased.PolicyNames }}
-                                        "{{ $policy }}",
-                                    {{- end }}
-                                },
-                                {{- if $method.Rules.PolicyBased.Requirement }}
-                                    Requirement: guard.Requirement({{ $method.Rules.PolicyBased.Requirement }}),
-                                {{- end }}
-                            {{- end }}
-                        },
-                    {{- end }}
+                "{{ $name }}": {
+                    Rules: {{ template "guard-rules" $method.Rules }},
                 },
-            },
             {{- end }}
         },
     }
@@ -99,4 +78,3 @@ import (
         return &guardService_{{ .Name }}
     }
 {{- end }}
-

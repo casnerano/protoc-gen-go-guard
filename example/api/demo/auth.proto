@@ -19,6 +19,6 @@ service Auth {
 
   // Overrides service rules - requires authentication
   rpc Logout(google.protobuf.Empty) returns (google.protobuf.Empty) {
-    option (guard.method_rules).require_authentication = true;
+    option (guard.method_rules) = { require_authentication: true };
   }
 }

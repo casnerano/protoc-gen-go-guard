@@ -8,27 +8,39 @@ import "google/protobuf/empty.proto";
 import "proto/guard.proto";
 
 service MixedTypesAccess {
-  option (guard.service_rules).role_based = {
-    allowed_roles: ["admin"],
-    requirement: ANY
+  option (guard.service_rules) = {
+    authenticated_access: {
+      role_based: {
+        roles: ["admin"],
+        match: AT_LEAST_ONE
+      }
+    }
   };
 
   rpc OverrideWithPolicies(google.protobuf.Empty) returns (google.protobuf.Empty) {
-    option (guard.method_rules).policy_based = {
-      policy_names: ["positive-policy-1"],
-      requirement: ALL
+    option (guard.method_rules) = {
+      authenticated_access: {
+        policy_based: {
+          policies: ["positive-policy-1"],
+          match: ALL
+        }
+      }
     };
   };
 
 
   rpc OverrideWithRoles(google.protobuf.Empty) returns (google.protobuf.Empty) {
-    option (guard.method_rules).role_based = {
-      allowed_roles: ["admin"],
-      requirement: ANY
+    option (guard.method_rules) = {
+      authenticated_access: {
+        role_based: {
+          roles: ["admin"],
+          match: AT_LEAST_ONE
+        }
+      }
     };
   };
 
   rpc OverrideWithAuthentication(google.protobuf.Empty) returns (google.protobuf.Empty) {
-    option (guard.method_rules).require_authentication = true;
+    option (guard.method_rules) = { require_authentication: true };
   };
 }

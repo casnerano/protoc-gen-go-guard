@@ -1,37 +1,41 @@
 package guard
 
-type Requirement int
+type Match int
 
 const (
-	RequirementAny Requirement = iota
-	RequirementAll
+	MatchAtLeastOne Match = iota
+	MatchAll
 )
 
-type Rules struct {
-	AllowPublic  *bool
-	RequireAuthn *bool
-	RoleBased    *RoleBased
-	PolicyBased  *PolicyBased
+type Rule struct {
+	AllowPublic           *bool
+	RequireAuthentication *bool
+	AuthenticatedAccess   *AuthenticatedAccess
+}
+
+type AuthenticatedAccess struct {
+	RoleBased   *RoleBased
+	PolicyBased *PolicyBased
 }
 
 type RoleBased struct {
-	AllowedRoles []string
-	Requirement  Requirement
+	Roles []string
+	Match Match
 }
 
 type PolicyBased struct {
-	PolicyNames []string
-	Requirement Requirement
+	Policies []string
+	Match    Match
 }
 
 type Service struct {
 	Name    string
-	Rules   *Rules
+	Rules   []*Rule
 	Methods map[string]*Method
 }
 
 type Method struct {
-	Rules *Rules
+	Rules []*Rule
 }
 
 func Ptr[T any](v T) *T {

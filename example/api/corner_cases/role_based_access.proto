@@ -9,30 +9,46 @@ import "proto/guard.proto";
 
 service RoleBasedAccess {
   rpc EmptyRolesWithAnyRequirement(google.protobuf.Empty) returns (google.protobuf.Empty) {
-    option (guard.method_rules).role_based = {
-      allowed_roles: [],
-      requirement: ANY
+    option (guard.method_rules) = {
+      authenticated_access: {
+        role_based: {
+          roles: [],
+          match: AT_LEAST_ONE
+        }
+      }
     };
   };
 
   rpc EmptyRolesWithAllRequirement(google.protobuf.Empty) returns (google.protobuf.Empty) {
-    option (guard.method_rules).role_based = {
-      allowed_roles: [],
-      requirement: ALL
+    option (guard.method_rules) = {
+      authenticated_access: {
+        role_based: {
+          roles: [],
+          match: ALL
+        }
+      }
     };
   };
 
   rpc MultipleRolesWithAnyRequirement(google.protobuf.Empty) returns (google.protobuf.Empty) {
-    option (guard.method_rules).role_based = {
-      allowed_roles: ["admin", "manager"],
-      requirement: ANY
+    option (guard.method_rules) = {
+      authenticated_access: {
+        role_based: {
+          roles: ["admin", "manager"],
+          match: AT_LEAST_ONE
+        }
+      }
     };
   };
 
   rpc MultipleRolesWithAllRequirement(google.protobuf.Empty) returns (google.protobuf.Empty) {
-    option (guard.method_rules).role_based = {
-      allowed_roles: ["admin", "manager"],
-      requirement: ALL
+    option (guard.method_rules) = {
+      authenticated_access: {
+        role_based: {
+          roles: ["admin", "manager"],
+          match: ALL
+        }
+      }
     };
   };
 }

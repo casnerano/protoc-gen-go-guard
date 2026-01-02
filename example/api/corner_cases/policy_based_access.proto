@@ -9,30 +9,46 @@ import "proto/guard.proto";
 
 service PolicyBasedAccess {
   rpc EmptyPoliciesWithAnyRequirement(google.protobuf.Empty) returns (google.protobuf.Empty) {
-    option (guard.method_rules).policy_based = {
-      policy_names: [],
-      requirement: ANY
+    option (guard.method_rules) = {
+      authenticated_access: {
+        policy_based: {
+          policies: [],
+          match: AT_LEAST_ONE
+        }
+      }
     };
   };
 
   rpc EmptyPoliciesWithAllRequirement(google.protobuf.Empty) returns (google.protobuf.Empty) {
-    option (guard.method_rules).policy_based = {
-      policy_names: [],
-      requirement: ALL
+    option (guard.method_rules) = {
+      authenticated_access: {
+        policy_based: {
+          policies: [],
+          match: ALL
+        }
+      }
     };
   };
 
   rpc MultiplePoliciesWithAnyRequirement(google.protobuf.Empty) returns (google.protobuf.Empty) {
-    option (guard.method_rules).policy_based = {
-      policy_names: ["policy1", "policy2"],
-      requirement: ANY
+    option (guard.method_rules) = {
+      authenticated_access: {
+        policy_based: {
+          policies: ["policy1", "policy2"],
+          match: AT_LEAST_ONE
+        }
+      }
     };
   };
 
   rpc MultiplePoliciesWithAllRequirement(google.protobuf.Empty) returns (google.protobuf.Empty) {
-    option (guard.method_rules).policy_based = {
-      policy_names: ["policy1", "policy2"],
-      requirement: ALL
+    option (guard.method_rules) = {
+      authenticated_access: {
+        policy_based: {
+          policies: ["policy1", "policy2"],
+          match: ALL
+        }
+      }
     };
   };
 }

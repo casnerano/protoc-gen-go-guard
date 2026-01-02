@@ -13,16 +13,16 @@ enum Match {
 
 message RoleBased {
   repeated string roles = 1;
-  optional Match requirement = 2;
+  optional Match match = 2;
 }
 
 message PolicyBased {
   repeated string policies = 1;
-  optional Match requirement = 2;
+  optional Match match = 2;
 }
 
 message Rule {
-  oneof strategy {
+  oneof mode {
     bool allow_public = 1;
     bool require_authentication = 2;
     AuthenticatedAccess authenticated_access = 3;
@@ -37,6 +37,7 @@ message AuthenticatedAccess {
 extend google.protobuf.ServiceOptions {
   repeated Rule service_rules = 50001;
 }
+
 extend google.protobuf.MethodOptions {
   repeated Rule method_rules = 50002;
 }

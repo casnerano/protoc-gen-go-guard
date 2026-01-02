@@ -11,16 +11,16 @@ service InheritAndOverrideOne {
   rpc InheritedMethod(google.protobuf.Empty) returns (google.protobuf.Empty);
 
   rpc OverriddenMethod(google.protobuf.Empty) returns (google.protobuf.Empty) {
-    option (guard.method_rules).allow_public = true;
+    option (guard.method_rules) = { allow_public: true };
   };
 }
 
 service InheritAndOverrideTwo {
-  option (guard.service_rules).allow_public = true;
+  option (guard.service_rules) = { allow_public: true };
 
   rpc InheritedMethod(google.protobuf.Empty) returns (google.protobuf.Empty);
 
   rpc OverriddenMethod(google.protobuf.Empty) returns (google.protobuf.Empty) {
-    option (guard.method_rules).allow_public = false;
+    option (guard.method_rules) = { allow_public: false };
   };
 }

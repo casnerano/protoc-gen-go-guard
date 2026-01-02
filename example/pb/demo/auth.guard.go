@@ -11,12 +11,16 @@ import (
 )
 
 var guardService_Auth = guard.Service{
-	Name:  "Auth",
-	Rules: &guard.Rules{},
+	Name: "Auth",
+	Rules: []*guard.Rule{
+		{},
+	},
 	Methods: map[string]*guard.Method{
 		"Logout": {
-			Rules: &guard.Rules{
-				RequireAuthn: guard.Ptr(true),
+			Rules: []*guard.Rule{
+				{
+					RequireAuthentication: guard.Ptr(true),
+				},
 			},
 		},
 	},
