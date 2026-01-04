@@ -85,7 +85,7 @@ func (i *interceptor) authorize(ctx context.Context, server any, fullMethod stri
 
 	rules := i.getRules(server, fullMethod)
 
-	allowed, err := i.rulesEvaluate(ctx, rules, &input)
+	allowed, err := i.evaluateRules(ctx, rules, &input)
 	if err != nil {
 		if i.debug {
 			log.Printf("Evaluation error for %s: %v", fullMethod, err)
@@ -105,10 +105,6 @@ func (i *interceptor) authorize(ctx context.Context, server any, fullMethod stri
 
 		if i.eventHandlers.OnAccessDenied != nil {
 			i.eventHandlers.OnAccessDenied(ctx, &input)
-		}
-
-		if UnauthenticatedDenial(rules, &input) {
-			return status.Error(codes.Unauthenticated, codes.Unauthenticated.String())
 		}
 
 		return status.Error(codes.PermissionDenied, codes.PermissionDenied.String())
@@ -137,22 +133,4 @@ func (i *interceptor) Stream() grpc.StreamServerInterceptor {
 		}
 		return handler(srv, ss)
 	}
-}
-
-func UnauthenticatedDenial(rules guard.Rules, input *Input) bool {
-	if input != nil && input.Authenticated() {
-		return false
-	}
-	for _, rule := range rules {
-		if rule.AllowPublic != nil && *rule.AllowPublic {
-			// would have allowed if public
-			return false
-		}
-		if rule.RequireAuthentication != nil && !*rule.RequireAuthentication {
-			// allows unauth
-			return false
-		}
-	}
-	// all rules require auth
-	return true
 }
