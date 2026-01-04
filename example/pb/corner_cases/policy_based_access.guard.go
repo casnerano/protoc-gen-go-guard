@@ -64,6 +64,6 @@ var guardService_PolicyBasedAccess = guard.Service{
 	},
 }
 
-func (UnimplementedPolicyBasedAccessServer) GetGuardService() *guard.Service {
+func (UnimplementedPolicyBasedAccessServer) GuardService() *guard.Service {
 	return &guardService_PolicyBasedAccess
 }

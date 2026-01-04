@@ -57,6 +57,6 @@ var guardService_MixedTypesAccess = guard.Service{
 	},
 }
 
-func (UnimplementedMixedTypesAccessServer) GetGuardService() *guard.Service {
+func (UnimplementedMixedTypesAccessServer) GuardService() *guard.Service {
 	return &guardService_MixedTypesAccess
 }

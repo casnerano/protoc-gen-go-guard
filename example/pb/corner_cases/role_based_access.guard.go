@@ -64,6 +64,6 @@ var guardService_RoleBasedAccess = guard.Service{
 	},
 }
 
-func (UnimplementedRoleBasedAccessServer) GetGuardService() *guard.Service {
+func (UnimplementedRoleBasedAccessServer) GuardService() *guard.Service {
 	return &guardService_RoleBasedAccess
 }

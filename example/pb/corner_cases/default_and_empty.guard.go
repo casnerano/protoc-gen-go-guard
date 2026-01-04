@@ -18,7 +18,7 @@ var guardService_EmptyServiceRules = guard.Service{
 	Methods: map[string]*guard.Method{},
 }
 
-func (UnimplementedEmptyServiceRulesServer) GetGuardService() *guard.Service {
+func (UnimplementedEmptyServiceRulesServer) GuardService() *guard.Service {
 	return &guardService_EmptyServiceRules
 }
 
@@ -33,7 +33,7 @@ var guardService_EmptyMethodRules = guard.Service{
 	},
 }
 
-func (UnimplementedEmptyMethodRulesServer) GetGuardService() *guard.Service {
+func (UnimplementedEmptyMethodRulesServer) GuardService() *guard.Service {
 	return &guardService_EmptyMethodRules
 }
 
@@ -51,6 +51,6 @@ var guardService_EmptyServiceAndMethodRules = guard.Service{
 	},
 }
 
-func (UnimplementedEmptyServiceAndMethodRulesServer) GetGuardService() *guard.Service {
+func (UnimplementedEmptyServiceAndMethodRulesServer) GuardService() *guard.Service {
 	return &guardService_EmptyServiceAndMethodRules
 }

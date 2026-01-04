@@ -52,6 +52,6 @@ var guardService_User = guard.Service{
 	},
 }
 
-func (UnimplementedUserServer) GetGuardService() *guard.Service {
+func (UnimplementedUserServer) GuardService() *guard.Service {
 	return &guardService_User
 }

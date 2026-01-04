@@ -26,6 +26,6 @@ var guardService_Auth = guard.Service{
 	},
 }
 
-func (UnimplementedAuthServer) GetGuardService() *guard.Service {
+func (UnimplementedAuthServer) GuardService() *guard.Service {
 	return &guardService_Auth
 }

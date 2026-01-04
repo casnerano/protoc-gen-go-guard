@@ -23,7 +23,7 @@ var guardService_InheritAndOverrideOne = guard.Service{
 	},
 }
 
-func (UnimplementedInheritAndOverrideOneServer) GetGuardService() *guard.Service {
+func (UnimplementedInheritAndOverrideOneServer) GuardService() *guard.Service {
 	return &guardService_InheritAndOverrideOne
 }
 
@@ -45,6 +45,6 @@ var guardService_InheritAndOverrideTwo = guard.Service{
 	},
 }
 
-func (UnimplementedInheritAndOverrideTwoServer) GetGuardService() *guard.Service {
+func (UnimplementedInheritAndOverrideTwoServer) GuardService() *guard.Service {
 	return &guardService_InheritAndOverrideTwo
 }
