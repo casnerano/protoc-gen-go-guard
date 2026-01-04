@@ -64,6 +64,10 @@ func New(resolver SubjectResolver, opts ...Option) *interceptor {
 }
 
 func (i *interceptor) authorize(ctx context.Context, server any, fullMethod string, req any) error {
+	input := Input{
+		Request: req,
+	}
+
 	subject, err := i.subjectResolver(ctx)
 	if err != nil {
 		if i.debug {
@@ -71,38 +75,26 @@ func (i *interceptor) authorize(ctx context.Context, server any, fullMethod stri
 		}
 
 		if i.eventHandlers.OnError != nil {
-			i.eventHandlers.OnError(ctx, nil, err)
+			i.eventHandlers.OnError(ctx, &input, err)
 		}
 
 		return status.Error(codes.Internal, "failed to resolve subject")
 	}
 
-	input := &Input{
-		Request: req,
-		Subject: subject,
-	}
+	input.Subject = subject
 
 	rules := i.getRules(server, fullMethod)
-	if len(rules) == 0 {
-		if i.debug {
-			log.Printf("No rules defined for %s", fullMethod)
-		}
 
-		if i.eventHandlers.OnAccessDenied != nil {
-			i.eventHandlers.OnAccessDenied(ctx, input)
-		}
-
-		return status.Error(codes.PermissionDenied, "no rules defined")
-	}
-
-	allowed, err := i.rulesEvaluate(ctx, rules, input)
+	allowed, err := i.rulesEvaluate(ctx, rules, &input)
 	if err != nil {
 		if i.debug {
 			log.Printf("Evaluation error for %s: %v", fullMethod, err)
 		}
+
 		if i.eventHandlers.OnError != nil {
-			i.eventHandlers.OnError(ctx, input, err)
+			i.eventHandlers.OnError(ctx, &input, err)
 		}
+
 		return status.Error(codes.Internal, "evaluation error")
 	}
 
@@ -110,15 +102,16 @@ func (i *interceptor) authorize(ctx context.Context, server any, fullMethod stri
 		if i.debug {
 			log.Printf("Access denied for %s", fullMethod)
 		}
+
 		if i.eventHandlers.OnAccessDenied != nil {
-			i.eventHandlers.OnAccessDenied(ctx, input)
+			i.eventHandlers.OnAccessDenied(ctx, &input)
 		}
 
-		// check if denial due to auth requirement
-		if UnauthenticatedDenial(rules, input) {
-			return status.Error(codes.Unauthenticated, "unauthenticated")
+		if UnauthenticatedDenial(rules, &input) {
+			return status.Error(codes.Unauthenticated, codes.Unauthenticated.String())
 		}
-		return status.Error(codes.PermissionDenied, "access denied")
+
+		return status.Error(codes.PermissionDenied, codes.PermissionDenied.String())
 	}
 
 	if i.debug {

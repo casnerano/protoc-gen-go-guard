@@ -2,8 +2,13 @@ package interceptor
 
 import (
 	"context"
+	"errors"
 
 	"github.com/casnerano/protoc-gen-go-guard/pkg/guard"
+)
+
+var (
+	errUnauthenticated = errors.New("unauthenticated")
 )
 
 func (i *interceptor) rulesEvaluate(ctx context.Context, rules guard.Rules, input *Input) (bool, error) {
