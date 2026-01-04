@@ -74,7 +74,7 @@ import (
         },
     }
 
-    func (Unimplemented{{ .Name }}Server) GetGuardService() *guard.Service {
+    func (Unimplemented{{ .Name }}Server) GuardService() *guard.Service {
         return &guardService_{{ .Name }}
     }
 {{- end }}
