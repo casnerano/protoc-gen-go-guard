@@ -32,12 +32,12 @@ type PolicyBased struct {
 
 type Service struct {
     Name    string
-    Rules   []*Rule
+    Rules   Rules
     Methods map[string]*Method
 }
 
 type Method struct {
-    Rules []*Rule
+    Rules Rules
 }
 
 func Ptr[T any](v T) *T {

@@ -17,7 +17,7 @@ type (
 
 type Input struct {
     Request any
-    Subject Subject
+    Subject *Subject
 }
 
 type (
