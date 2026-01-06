@@ -14,6 +14,7 @@ import (
 
 type DefaultRulesServerTestSuite struct {
 	CornerCasesServerTestSuite
+
 	client desc.DefaultRulesClient
 }
 
@@ -62,6 +63,7 @@ func (s *DefaultRulesServerTestSuite) TestGetOne() {
 
 type EmptyServiceRulesServerTestSuite struct {
 	CornerCasesServerTestSuite
+
 	client desc.EmptyServiceRulesClient
 }
 
@@ -110,6 +112,7 @@ func (s *EmptyServiceRulesServerTestSuite) TestGetOne() {
 
 type EmptyMethodRulesServerTestSuite struct {
 	CornerCasesServerTestSuite
+
 	client desc.EmptyMethodRulesClient
 }
 
@@ -158,6 +161,7 @@ func (s *EmptyMethodRulesServerTestSuite) TestGetOne() {
 
 type EmptyServiceAndMethodRulesServerTestSuite struct {
 	CornerCasesServerTestSuite
+
 	client desc.EmptyServiceAndMethodRulesClient
 }
 

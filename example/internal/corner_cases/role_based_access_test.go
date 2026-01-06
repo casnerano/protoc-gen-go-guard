@@ -14,6 +14,7 @@ import (
 
 type RoleBasedAccessServerTestSuite struct {
 	CornerCasesServerTestSuite
+
 	client desc.RoleBasedAccessClient
 }
 

@@ -14,6 +14,7 @@ import (
 
 type InheritAndOverrideOneServerTestSuite struct {
 	CornerCasesServerTestSuite
+
 	client desc.InheritAndOverrideOneClient
 }
 
@@ -85,6 +86,7 @@ func (s *InheritAndOverrideOneServerTestSuite) TestOverriddenMethod() {
 
 type InheritAndOverrideTwoServerTestSuite struct {
 	CornerCasesServerTestSuite
+
 	client desc.InheritAndOverrideTwoClient
 }
 
