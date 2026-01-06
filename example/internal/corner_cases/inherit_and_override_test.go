@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	desc "github.com/casnerano/protoc-gen-go-guard/example/pb/corner_cases"
+	"github.com/casnerano/protoc-gen-go-guard/pkg/interceptor"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -40,7 +41,7 @@ func (s *InheritAndOverrideOneServerTestSuite) TestInheritedMethod() {
 		},
 		{
 			name:      "access denied with token",
-			context:   testContextWithMetadata("test-token"),
+			context:   testContextWithSubject(interceptor.Subject{}),
 			canAccess: false,
 		},
 	}
@@ -136,7 +137,7 @@ func (s *InheritAndOverrideTwoServerTestSuite) TestOverriddenMethod() {
 		},
 		{
 			name:      "access denied with token",
-			context:   testContextWithMetadata("test-token"),
+			context:   testContextWithSubject(interceptor.Subject{}),
 			canAccess: false,
 		},
 	}

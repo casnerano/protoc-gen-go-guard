@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	desc "github.com/casnerano/protoc-gen-go-guard/example/pb/corner_cases"
+	"github.com/casnerano/protoc-gen-go-guard/pkg/interceptor"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -39,8 +40,10 @@ func (s *DefaultRulesServerTestSuite) TestGetOne() {
 			canAccess: false,
 		},
 		{
-			name:      "access denied with token and roles",
-			context:   testContextWithMetadata("test-token", "admin", "manager"),
+			name: "access denied with token and roles",
+			context: testContextWithSubject(interceptor.Subject{
+				Roles: []string{"admin"},
+			}),
 			canAccess: false,
 		},
 	}
@@ -85,8 +88,10 @@ func (s *EmptyServiceRulesServerTestSuite) TestGetOne() {
 			canAccess: false,
 		},
 		{
-			name:      "access denied with token and roles",
-			context:   testContextWithMetadata("test-token", "admin", "manager"),
+			name: "access denied with token and roles",
+			context: testContextWithSubject(interceptor.Subject{
+				Roles: []string{"admin", "manager"},
+			}),
 			canAccess: false,
 		},
 	}
@@ -131,8 +136,10 @@ func (s *EmptyMethodRulesServerTestSuite) TestGetOne() {
 			canAccess: false,
 		},
 		{
-			name:      "access denied with token and roles",
-			context:   testContextWithMetadata("test-token", "admin", "manager"),
+			name: "access denied with token and roles",
+			context: testContextWithSubject(interceptor.Subject{
+				Roles: []string{"admin", "manager"},
+			}),
 			canAccess: false,
 		},
 	}
@@ -177,8 +184,10 @@ func (s *EmptyServiceAndMethodRulesServerTestSuite) TestGetOne() {
 			canAccess: false,
 		},
 		{
-			name:      "access denied with token and roles",
-			context:   testContextWithMetadata("test-token", "admin", "manager"),
+			name: "access denied with token and roles",
+			context: testContextWithSubject(interceptor.Subject{
+				Roles: []string{"admin", "manager"},
+			}),
 			canAccess: false,
 		},
 	}

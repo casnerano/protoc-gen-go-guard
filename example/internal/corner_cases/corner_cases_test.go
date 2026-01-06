@@ -4,6 +4,7 @@ import (
 	"context"
 	"net"
 
+	"github.com/casnerano/protoc-gen-go-guard/pkg/interceptor"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -12,52 +13,52 @@ import (
 )
 
 type CornerCasesServerTestSuite struct {
-    suite.Suite
+	suite.Suite
 
-    listener *bufconn.Listener
-    server   *grpc.Server
+	listener *bufconn.Listener
+	server   *grpc.Server
 }
 
 func (g *CornerCasesServerTestSuite) SetupSuite() {
-    const bufferSize = 1024 * 1024
-    g.listener = bufconn.Listen(bufferSize)
+	const bufferSize = 1024 * 1024
+	g.listener = bufconn.Listen(bufferSize)
 
-    g.server = grpc.NewServer(
-        grpc.UnaryInterceptor(
-            test.GuardUnary(
-                testAuthContextResolver(),
-                test.WithPolicies(testPolicies()),
-            ),
-        ),
-    )
+	g.server = grpc.NewServer(
+		grpc.UnaryInterceptor(
+			interceptor.New(
+				testSubjectResolver(),
+				interceptor.WithPolicies(testPolicies()),
+			).Unary(),
+		),
+	)
 }
 
 func (g *CornerCasesServerTestSuite) TearDownSuite() {
-    if g.server != nil {
-        g.server.GracefulStop()
-    }
+	if g.server != nil {
+		g.server.GracefulStop()
+	}
 
-    if g.listener != nil {
-        _ = g.listener.Close()
-    }
+	if g.listener != nil {
+		_ = g.listener.Close()
+	}
 }
 
 func (g *CornerCasesServerTestSuite) StartServer() {
-    go func() {
-        if err := g.server.Serve(g.listener); err != nil {
-            g.T().Logf("Failed serve at %v: %v", g.listener.Addr(), err)
-        }
-    }()
+	go func() {
+		if err := g.server.Serve(g.listener); err != nil {
+			g.T().Logf("Failed serve at %v: %v", g.listener.Addr(), err)
+		}
+	}()
 }
 
 func (g *CornerCasesServerTestSuite) GetClientConn() (*grpc.ClientConn, error) {
-    return grpc.NewClient(
-        "passthrough://bufnet",
-        grpc.WithContextDialer(func(_ context.Context, _ string) (net.Conn, error) {
-            return g.listener.Dial()
-        }),
-        grpc.WithTransportCredentials(insecure.NewCredentials()),
-    )
+	return grpc.NewClient(
+		"passthrough://bufnet",
+		grpc.WithContextDialer(func(_ context.Context, _ string) (net.Conn, error) {
+			return g.listener.Dial()
+		}),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
 }
 
 //func testRegisterServers(server *grpc.Server) {
@@ -75,48 +76,39 @@ func (g *CornerCasesServerTestSuite) GetClientConn() (*grpc.ClientConn, error) {
 //	desc.RegisterRoleBasedAccessServer(server, &RoleBasedAccessServer{})
 //}
 
-func testAuthContextResolver() test.AuthContextResolver {
-    return func(ctx context.Context) (*test.AuthContext, error) {
-        md, ok := metadata.FromIncomingContext(ctx)
-        if !ok {
-            return &test.AuthContext{}, nil
-        }
+func testSubjectResolver() interceptor.SubjectResolver {
+	return func(ctx context.Context) (*interceptor.Subject, error) {
+		md, ok := metadata.FromIncomingContext(ctx)
+		if !ok {
+			return nil, nil
+		}
 
-        authContext := test.AuthContext{}
+		subject := interceptor.Subject{}
+		if roles, exists := md["roles"]; exists {
+			subject.Roles = roles
+		}
 
-        if authorization, exists := md["authorization"]; exists && len(authorization) > 0 {
-            authContext.Authenticated = true
-        }
-
-        if roles, exists := md["roles"]; exists && len(roles) > 0 {
-            authContext.Roles = roles
-        }
-
-        return &authContext, nil
-    }
+		return &subject, nil
+	}
 }
 
-func testPolicies() test.Policies {
-    return test.Policies{
-        "positive-policy-1": func(ctx context.Context, authContext *test.AuthContext, request interface{}) (bool, error) {
-            return true, nil
-        },
-        "positive-policy-2": func(ctx context.Context, authContext *test.AuthContext, request interface{}) (bool, error) {
-            return true, nil
-        },
-        "negative-policy-1": func(ctx context.Context, authContext *test.AuthContext, request interface{}) (bool, error) {
-            return false, nil
-        },
-    }
+func testContextWithSubject(subject interceptor.Subject) context.Context {
+	md := metadata.MD{}
+	md.Append("roles", subject.Roles...)
+
+	return metadata.NewOutgoingContext(context.Background(), md)
 }
 
-func testContextWithMetadata(token string, roles ...string) context.Context {
-    md := metadata.MD{}
-    md.Append("authorization", token)
-
-    if len(roles) > 0 {
-        md.Append("roles", roles...)
-    }
-
-    return metadata.NewOutgoingContext(context.Background(), md)
+func testPolicies() interceptor.Policies {
+	return interceptor.Policies{
+		"positive-policy-1": func(ctx context.Context, input *interceptor.Input) (bool, error) {
+			return true, nil
+		},
+		"positive-policy-2": func(ctx context.Context, input *interceptor.Input) (bool, error) {
+			return true, nil
+		},
+		"negative-policy-1": func(ctx context.Context, input *interceptor.Input) (bool, error) {
+			return false, nil
+		},
+	}
 }

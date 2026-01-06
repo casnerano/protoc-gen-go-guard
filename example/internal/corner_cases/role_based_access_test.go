@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	desc "github.com/casnerano/protoc-gen-go-guard/example/pb/corner_cases"
+	"github.com/casnerano/protoc-gen-go-guard/pkg/interceptor"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -40,7 +41,7 @@ func (s *RoleBasedAccessServerTestSuite) TestEmptyRolesWithAnyRequirement() {
 		},
 		{
 			name:      "access denied with token and without no roles",
-			context:   testContextWithMetadata("test-token"),
+			context:   testContextWithSubject(interceptor.Subject{}),
 			canAccess: false,
 		},
 	}
@@ -70,7 +71,7 @@ func (s *RoleBasedAccessServerTestSuite) TestEmptyRolesWithAllRequirement() {
 		},
 		{
 			name:      "access denied with token and without no roles",
-			context:   testContextWithMetadata("test-token"),
+			context:   testContextWithSubject(interceptor.Subject{}),
 			canAccess: false,
 		},
 	}
@@ -99,13 +100,17 @@ func (s *RoleBasedAccessServerTestSuite) TestMultipleRolesWithAnyRequirement() {
 			canAccess: false,
 		},
 		{
-			name:      "access allowed with token and with one required role",
-			context:   testContextWithMetadata("test-token", "admin"),
+			name: "access allowed with token and with one required role",
+			context: testContextWithSubject(interceptor.Subject{
+				Roles: []string{"admin"},
+			}),
 			canAccess: true,
 		},
 		{
-			name:      "access allowed with token and without required roles",
-			context:   testContextWithMetadata("test-token", "non-exists-role"),
+			name: "access allowed with token and without required roles",
+			context: testContextWithSubject(interceptor.Subject{
+				Roles: []string{"non-exists-role"},
+			}),
 			canAccess: false,
 		},
 	}
@@ -134,13 +139,17 @@ func (s *RoleBasedAccessServerTestSuite) TestMultipleRolesWithAllRequirement() {
 			canAccess: false,
 		},
 		{
-			name:      "access denied with token and with one required role",
-			context:   testContextWithMetadata("test-token", "admin"),
+			name: "access denied with token and with one required role",
+			context: testContextWithSubject(interceptor.Subject{
+				Roles: []string{"admin"},
+			}),
 			canAccess: false,
 		},
 		{
-			name:      "access allowed with token and with all required roles",
-			context:   testContextWithMetadata("test-token", "admin", "manager"),
+			name: "access allowed with token and with all required roles",
+			context: testContextWithSubject(interceptor.Subject{
+				Roles: []string{"admin", "manager"},
+			}),
 			canAccess: true,
 		},
 	}

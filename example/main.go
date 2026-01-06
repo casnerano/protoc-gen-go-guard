@@ -4,71 +4,68 @@ import (
 	"context"
 	"log"
 	"net"
-	"strings"
 
 	"github.com/casnerano/protoc-gen-go-guard/example/internal/demo"
 	desc "github.com/casnerano/protoc-gen-go-guard/example/pb/demo"
+	"github.com/casnerano/protoc-gen-go-guard/pkg/interceptor"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/reflection"
 )
 
-func createAuthResolver() test.AuthContextResolver {
-    return func(ctx context.Context) (*test.AuthContext, error) {
-        md, ok := metadata.FromIncomingContext(ctx)
-        if !ok {
-            return &test.AuthContext{}, nil
-        }
+func createSubjectResolver() interceptor.SubjectResolver {
+	return func(ctx context.Context) (*interceptor.Subject, error) {
+		md, ok := metadata.FromIncomingContext(ctx)
+		if !ok {
+			return nil, nil
+		}
 
-        authContext := test.AuthContext{}
+		subject := interceptor.Subject{}
+		if roles, exists := md["roles"]; exists {
+			subject.Roles = roles
+		}
 
-        if authorization, exists := md["authorization"]; exists && len(authorization) > 0 {
-            authContext.Authenticated = true
-        }
-
-        if roles, exists := md["roles"]; exists && len(roles) > 0 {
-            authContext.Roles = strings.Split(roles[0], ",")
-        }
-
-        return &authContext, nil
-    }
+		return &subject, nil
+	}
 }
 
-func buildPolicies() test.Policies {
-    return test.Policies{
-        "demo-period": func(ctx context.Context, authContext *test.AuthContext, request interface{}) (bool, error) {
-            // check demo period with auth context and request
-            return true, nil
-        },
-        "premium": func(ctx context.Context, authContext *test.AuthContext, request interface{}) (bool, error) {
-            // check premium with auth context and request
-            return false, nil
-        },
-    }
+func buildPolicies() interceptor.Policies {
+	return interceptor.Policies{
+		"demo-period": func(ctx context.Context, input *interceptor.Input) (bool, error) {
+			// check demo period with input
+			return true, nil
+		},
+		"premium": func(ctx context.Context, input *interceptor.Input) (bool, error) {
+			// check premium with input
+			return false, nil
+		},
+	}
 }
 
 func main() {
-    listener, err := net.Listen("tcp", ":9091")
-    if err != nil {
-        log.Fatalf("failed to listen: %v", err)
-    }
+	listener, err := net.Listen("tcp", ":9091")
+	if err != nil {
+		log.Fatalf("failed to listen: %v", err)
+	}
 
-    server := grpc.NewServer(
-        grpc.UnaryInterceptor(
-            test.GuardUnary(
-                createAuthResolver(),
-                test.WithPolicies(buildPolicies()),
-                test.WithDebug(),
-            ),
-        ),
-    )
+	guardInterceptor := interceptor.New(
+		createSubjectResolver(),
+		interceptor.WithPolicies(buildPolicies()),
+		interceptor.WithDebug(),
+	)
 
-    desc.RegisterAuthServer(server, &demo.AuthServer{})
-    desc.RegisterUserServer(server, &demo.UserServer{})
+	server := grpc.NewServer(
+		grpc.ChainUnaryInterceptor(
+			guardInterceptor.Unary(),
+		),
+	)
 
-    reflection.Register(server)
+	desc.RegisterAuthServer(server, &demo.AuthServer{})
+	desc.RegisterUserServer(server, &demo.UserServer{})
 
-    if err = server.Serve(listener); err != nil {
-        log.Fatalf("failed to serve: %v", err)
-    }
+	reflection.Register(server)
+
+	if err = server.Serve(listener); err != nil {
+		log.Fatalf("failed to serve: %v", err)
+	}
 }
