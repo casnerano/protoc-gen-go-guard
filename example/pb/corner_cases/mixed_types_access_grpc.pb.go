@@ -23,8 +23,11 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type MixedTypesAccessClient interface {
+	// Call with override rules.
 	OverrideWithPolicies(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// Call with override rules.
 	OverrideWithRoles(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// Call with override rules.
 	OverrideWithAuthentication(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
@@ -67,8 +70,11 @@ func (c *mixedTypesAccessClient) OverrideWithAuthentication(ctx context.Context,
 // All implementations must embed UnimplementedMixedTypesAccessServer
 // for forward compatibility
 type MixedTypesAccessServer interface {
+	// Call with override rules.
 	OverrideWithPolicies(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
+	// Call with override rules.
 	OverrideWithRoles(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
+	// Call with override rules.
 	OverrideWithAuthentication(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
 	mustEmbedUnimplementedMixedTypesAccessServer()
 }

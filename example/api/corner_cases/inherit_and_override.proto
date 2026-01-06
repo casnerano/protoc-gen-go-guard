@@ -29,7 +29,7 @@ service InheritAndOverrideTwo {
 
   // Call with override rules.
   rpc OverriddenMethod(google.protobuf.Empty) returns (google.protobuf.Empty) {
-    // Override inherited rules: disallow public access.
+    // Override inherited rules: denied public access.
     option (guard.method_rules) = { allow_public: false };
   };
 }

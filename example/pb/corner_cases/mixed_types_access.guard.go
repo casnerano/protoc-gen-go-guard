@@ -17,7 +17,7 @@ var guardService_MixedTypesAccess = guard.Service{
 			AuthenticatedAccess: &guard.AuthenticatedAccess{
 				RoleBased: &guard.RoleBased{
 					Roles: []string{"admin"},
-					Match: guard.MatchAtLeastOne,
+					Match: guard.Match(0),
 				},
 			},
 		},
@@ -48,7 +48,7 @@ var guardService_MixedTypesAccess = guard.Service{
 					AuthenticatedAccess: &guard.AuthenticatedAccess{
 						RoleBased: &guard.RoleBased{
 							Roles: []string{"admin"},
-							Match: guard.MatchAtLeastOne,
+							Match: guard.Match(1),
 						},
 					},
 				},

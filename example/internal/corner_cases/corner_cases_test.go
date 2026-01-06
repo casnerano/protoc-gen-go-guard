@@ -61,25 +61,14 @@ func (g *CornerCasesServerTestSuite) GetClientConn() (*grpc.ClientConn, error) {
 	)
 }
 
-//func testRegisterServers(server *grpc.Server) {
-//	desc.RegisterDefaultRulesServer(server, &DefaultRulesServer{})
-//	desc.RegisterEmptyServiceRulesServer(server, &EmptyServiceRulesServer{})
-//	desc.RegisterEmptyMethodRulesServer(server, &EmptyMethodRulesServer{})
-//	desc.RegisterEmptyServiceAndMethodRulesServer(server, &EmptyServiceAndMethodRulesServer{})
-//
-//	desc.RegisterInheritAndOverrideOneServer(server, &InheritAndOverrideOneServer{})
-//	desc.RegisterInheritAndOverrideTwoServer(server, &InheritAndOverrideTwoServer{})
-//
-//	desc.RegisterMixedTypesAccessServer(server, &MixedTypesAccessServer{})
-//
-//	desc.RegisterPolicyBasedAccessServer(server, &PolicyBasedAccessServer{})
-//	desc.RegisterRoleBasedAccessServer(server, &RoleBasedAccessServer{})
-//}
-
 func testSubjectResolver() interceptor.SubjectResolver {
 	return func(ctx context.Context) (*interceptor.Subject, error) {
 		md, ok := metadata.FromIncomingContext(ctx)
 		if !ok {
+			return nil, nil
+		}
+
+		if _, authenticated := md["authenticated"]; !authenticated {
 			return nil, nil
 		}
 
@@ -94,6 +83,7 @@ func testSubjectResolver() interceptor.SubjectResolver {
 
 func testContextWithSubject(subject interceptor.Subject) context.Context {
 	md := metadata.MD{}
+	md.Append("authenticated", "1")
 	md.Append("roles", subject.Roles...)
 
 	return metadata.NewOutgoingContext(context.Background(), md)

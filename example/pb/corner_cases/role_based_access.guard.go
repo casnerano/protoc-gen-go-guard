@@ -31,7 +31,7 @@ var guardService_RoleBasedAccess = guard.Service{
 					AuthenticatedAccess: &guard.AuthenticatedAccess{
 						RoleBased: &guard.RoleBased{
 							Roles: []string{},
-							Match: guard.MatchAtLeastOne,
+							Match: guard.Match(0),
 						},
 					},
 				},
@@ -55,7 +55,7 @@ var guardService_RoleBasedAccess = guard.Service{
 					AuthenticatedAccess: &guard.AuthenticatedAccess{
 						RoleBased: &guard.RoleBased{
 							Roles: []string{"admin", "manager"},
-							Match: guard.MatchAtLeastOne,
+							Match: guard.Match(0),
 						},
 					},
 				},

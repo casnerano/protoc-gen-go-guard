@@ -25,11 +25,7 @@ import (
                             "{{ . | toLower }}",
                         {{- end -}}
                     },
-                    {{- if .AuthenticatedAccess.RoleBased.Match }}
-                        Match: guard.Match({{ .AuthenticatedAccess.RoleBased.Match }}),
-                    {{- else }}
-                        Match: guard.MatchAtLeastOne,
-                    {{- end }}
+                    Match: guard.Match({{ .AuthenticatedAccess.RoleBased.Match }}),
                 },
             {{- end }}
             {{- if .AuthenticatedAccess.PolicyBased }}
@@ -39,11 +35,7 @@ import (
                         "{{ . }}",
                     {{- end -}}
                 },
-                {{- if .AuthenticatedAccess.PolicyBased.Match }}
-                    Match: guard.Match({{ .AuthenticatedAccess.PolicyBased.Match }}),
-                {{- else }}
-                    Match: guard.MatchAtLeastOne,
-                {{- end }}
+                Match: guard.Match({{ .AuthenticatedAccess.PolicyBased.Match }}),
             },
             {{- end }}
         },

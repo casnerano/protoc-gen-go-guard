@@ -31,7 +31,7 @@ var guardService_PolicyBasedAccess = guard.Service{
 					AuthenticatedAccess: &guard.AuthenticatedAccess{
 						PolicyBased: &guard.PolicyBased{
 							Policies: []string{},
-							Match:    guard.MatchAtLeastOne,
+							Match:    guard.Match(0),
 						},
 					},
 				},
@@ -55,7 +55,7 @@ var guardService_PolicyBasedAccess = guard.Service{
 					AuthenticatedAccess: &guard.AuthenticatedAccess{
 						PolicyBased: &guard.PolicyBased{
 							Policies: []string{"policy1", "policy2"},
-							Match:    guard.MatchAtLeastOne,
+							Match:    guard.Match(0),
 						},
 					},
 				},

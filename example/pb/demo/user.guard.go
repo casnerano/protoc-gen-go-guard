@@ -43,7 +43,7 @@ var guardService_User = guard.Service{
 					AuthenticatedAccess: &guard.AuthenticatedAccess{
 						PolicyBased: &guard.PolicyBased{
 							Policies: []string{"demo-period", "premium"},
-							Match:    guard.MatchAtLeastOne,
+							Match:    guard.Match(0),
 						},
 					},
 				},
