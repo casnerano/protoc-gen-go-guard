@@ -15,9 +15,10 @@ service DefaultRules {
 
 // Service with empty rules.
 service EmptyServiceRules {
-  // Explicitly empty — override default rules.
+  // Override default rules.
   option (guard.service_rules) = {};
-  // Call with empty rules (inheritance from service).
+
+  // Call with inherited rules.
   rpc GetOne(google.protobuf.Empty) returns (google.protobuf.Empty);
 }
 
@@ -25,19 +26,19 @@ service EmptyServiceRules {
 service EmptyMethodRules {
   // Call with empty rules.
   rpc GetOne(google.protobuf.Empty) returns (google.protobuf.Empty) {
-    // Explicitly empty — override default rules.
+    // Override default rules.
     option (guard.method_rules) = {};
   };
 }
 
 // Service with empty rules.
 service EmptyServiceAndMethodRules {
-  // Explicitly empty — override default rules.
+  // Override default rules.
   option (guard.service_rules) = {};
 
   // Call with empty rules.
   rpc GetOne(google.protobuf.Empty) returns (google.protobuf.Empty) {
-    // Explicitly empty — override inherited rules.
+    // Override inherited rules.
     option (guard.method_rules) = {};
   };
 }

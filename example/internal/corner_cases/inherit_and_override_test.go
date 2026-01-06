@@ -41,7 +41,7 @@ func (s *InheritAndOverrideOneServerTestSuite) TestInheritedMethod() {
 			canAccess: false,
 		},
 		{
-			name:      "access denied with token",
+			name:      "access denied for authenticated",
 			context:   testContextWithSubject(interceptor.Subject{}),
 			canAccess: false,
 		},
@@ -66,7 +66,7 @@ func (s *InheritAndOverrideOneServerTestSuite) TestOverriddenMethod() {
 		canAccess bool
 	}{
 		{
-			name:      "access allowed without token",
+			name:      "access allowed for unauthenticated",
 			context:   context.Background(),
 			canAccess: true,
 		},
@@ -108,7 +108,7 @@ func (s *InheritAndOverrideTwoServerTestSuite) TestInheritedMethod() {
 		canAccess bool
 	}{
 		{
-			name:      "access allowed without token",
+			name:      "access allowed for unauthenticated",
 			context:   context.Background(),
 			canAccess: true,
 		},
@@ -138,7 +138,7 @@ func (s *InheritAndOverrideTwoServerTestSuite) TestOverriddenMethod() {
 			canAccess: false,
 		},
 		{
-			name:      "access denied with token",
+			name:      "access denied for authenticated",
 			context:   testContextWithSubject(interceptor.Subject{}),
 			canAccess: false,
 		},

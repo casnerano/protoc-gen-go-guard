@@ -111,7 +111,7 @@ var DefaultRules_ServiceDesc = grpc.ServiceDesc{
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type EmptyServiceRulesClient interface {
-	// Call with empty rules (inheritance from service).
+	// Call with inherited rules.
 	GetOne(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
@@ -136,7 +136,7 @@ func (c *emptyServiceRulesClient) GetOne(ctx context.Context, in *emptypb.Empty,
 // All implementations must embed UnimplementedEmptyServiceRulesServer
 // for forward compatibility
 type EmptyServiceRulesServer interface {
-	// Call with empty rules (inheritance from service).
+	// Call with inherited rules.
 	GetOne(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
 	mustEmbedUnimplementedEmptyServiceRulesServer()
 }

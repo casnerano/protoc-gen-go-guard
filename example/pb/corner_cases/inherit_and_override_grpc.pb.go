@@ -23,7 +23,9 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type InheritAndOverrideOneClient interface {
+	// Call default rules.
 	InheritedMethod(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// Call override default rules.
 	OverriddenMethod(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
@@ -57,7 +59,9 @@ func (c *inheritAndOverrideOneClient) OverriddenMethod(ctx context.Context, in *
 // All implementations must embed UnimplementedInheritAndOverrideOneServer
 // for forward compatibility
 type InheritAndOverrideOneServer interface {
+	// Call default rules.
 	InheritedMethod(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
+	// Call override default rules.
 	OverriddenMethod(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
 	mustEmbedUnimplementedInheritAndOverrideOneServer()
 }
@@ -145,7 +149,9 @@ var InheritAndOverrideOne_ServiceDesc = grpc.ServiceDesc{
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type InheritAndOverrideTwoClient interface {
+	// Call with inherited rules.
 	InheritedMethod(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// Call with override rules.
 	OverriddenMethod(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
@@ -179,7 +185,9 @@ func (c *inheritAndOverrideTwoClient) OverriddenMethod(ctx context.Context, in *
 // All implementations must embed UnimplementedInheritAndOverrideTwoServer
 // for forward compatibility
 type InheritAndOverrideTwoServer interface {
+	// Call with inherited rules.
 	InheritedMethod(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
+	// Call with override rules.
 	OverriddenMethod(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
 	mustEmbedUnimplementedInheritAndOverrideTwoServer()
 }
