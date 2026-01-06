@@ -11,7 +11,7 @@ service User {
   // Service requires authentication by default
   option (guard.service_rules) = { require_authentication: true };
 
-  // Overrides service rules - makes method public
+  // Overrides service rules — makes method public
   rpc GetPublicProfile(google.protobuf.Empty) returns (google.protobuf.Empty) {
     option (guard.method_rules) = { allow_public: true };
   }
@@ -19,7 +19,7 @@ service User {
   // Inherits service rules (requires authentication)
   rpc GetPrivateProfile(google.protobuf.Empty) returns (google.protobuf.Empty);
 
-  // Overrides service rules - requires ANY matching policy
+  // Overrides service rules — requires passed at least one policy.
   rpc UpdateProfileStatus(google.protobuf.Empty) returns (google.protobuf.Empty) {
     option (guard.method_rules) = {
       authenticated_access: {
@@ -31,7 +31,7 @@ service User {
     };
   }
 
-  // Overrides service rules - requires ALL specified roles
+  // Overrides service rules — requires all specified roles.
   rpc DeleteProfile(google.protobuf.Empty) returns (google.protobuf.Empty) {
     option (guard.method_rules) = {
       authenticated_access: {

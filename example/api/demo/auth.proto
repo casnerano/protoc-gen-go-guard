@@ -8,16 +8,16 @@ import "google/protobuf/empty.proto";
 import "proto/guard.proto";
 
 service Auth {
-  // Service is public by default
-  option (guard.service_rules) = {};
+  // Service is public by default.
+  option (guard.service_rules) = { allow_public: true };
 
-  // Inherits service rules (public access)
+  // Inherits service rules (public access).
   rpc Register(google.protobuf.Empty) returns (google.protobuf.Empty);
 
-  // Inherits service rules (public access)
+  // Inherits service rules (public access).
   rpc Login(google.protobuf.Empty) returns (google.protobuf.Empty);
 
-  // Overrides service rules - requires authentication
+  // Overrides service rules: requires authentication.
   rpc Logout(google.protobuf.Empty) returns (google.protobuf.Empty) {
     option (guard.method_rules) = { require_authentication: true };
   }

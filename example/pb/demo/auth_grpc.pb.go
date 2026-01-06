@@ -23,11 +23,11 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type AuthClient interface {
-	// Inherits service rules (public access)
+	// Inherits service rules (public access).
 	Register(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	// Inherits service rules (public access)
+	// Inherits service rules (public access).
 	Login(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	// Overrides service rules - requires authentication
+	// Overrides service rules: requires authentication.
 	Logout(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
@@ -70,11 +70,11 @@ func (c *authClient) Logout(ctx context.Context, in *emptypb.Empty, opts ...grpc
 // All implementations must embed UnimplementedAuthServer
 // for forward compatibility
 type AuthServer interface {
-	// Inherits service rules (public access)
+	// Inherits service rules (public access).
 	Register(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
-	// Inherits service rules (public access)
+	// Inherits service rules (public access).
 	Login(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
-	// Overrides service rules - requires authentication
+	// Overrides service rules: requires authentication.
 	Logout(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
 	mustEmbedUnimplementedAuthServer()
 }

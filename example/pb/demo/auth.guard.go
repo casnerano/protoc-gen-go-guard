@@ -13,7 +13,9 @@ import (
 var guardService_Auth = guard.Service{
 	Name: "Auth",
 	Rules: []*guard.Rule{
-		{},
+		{
+			AllowPublic: guard.Ptr(true),
+		},
 	},
 	Methods: map[string]*guard.Method{
 		"Logout": {
