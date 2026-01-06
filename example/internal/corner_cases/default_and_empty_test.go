@@ -41,9 +41,9 @@ func (s *DefaultRulesServerTestSuite) TestGetOne() {
 			canAccess: false,
 		},
 		{
-			name: "access denied for authenticated and with roles",
+			name: "access denied for authenticated and with other roles",
 			context: testContextWithSubject(interceptor.Subject{
-				Roles: []string{"admin"},
+				Roles: []string{"admin", "manager"},
 			}),
 			canAccess: false,
 		},
@@ -90,7 +90,7 @@ func (s *EmptyServiceRulesServerTestSuite) TestGetOne() {
 			canAccess: false,
 		},
 		{
-			name: "access denied for authenticated and with roles",
+			name: "access denied for authenticated and with other roles",
 			context: testContextWithSubject(interceptor.Subject{
 				Roles: []string{"admin", "manager"},
 			}),
@@ -139,7 +139,7 @@ func (s *EmptyMethodRulesServerTestSuite) TestGetOne() {
 			canAccess: false,
 		},
 		{
-			name: "access denied for authenticated and with roles",
+			name: "access denied for authenticated and with other roles",
 			context: testContextWithSubject(interceptor.Subject{
 				Roles: []string{"admin", "manager"},
 			}),
@@ -188,7 +188,7 @@ func (s *EmptyServiceAndMethodRulesServerTestSuite) TestGetOne() {
 			canAccess: false,
 		},
 		{
-			name: "access denied for authenticated and with roles",
+			name: "access denied for authenticated and with other roles",
 			context: testContextWithSubject(interceptor.Subject{
 				Roles: []string{"admin", "manager"},
 			}),
