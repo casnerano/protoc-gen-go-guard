@@ -36,12 +36,12 @@ func (s *RoleBasedAccessServerTestSuite) TestEmptyRolesWithAnyRequirement() {
 		canAccess bool
 	}{
 		{
-			name:      "access denied without token",
+			name:      "access denied for unauthenticated",
 			context:   context.Background(),
 			canAccess: false,
 		},
 		{
-			name:      "access denied with token and without no roles",
+			name:      "access denied for authenticated and without roles",
 			context:   testContextWithSubject(interceptor.Subject{}),
 			canAccess: false,
 		},
@@ -53,7 +53,7 @@ func (s *RoleBasedAccessServerTestSuite) TestEmptyRolesWithAnyRequirement() {
 			if tt.canAccess {
 				s.NoError(err)
 			} else {
-				s.Equal(codes.PermissionDenied, status.Code(err))
+				s.Equal(codes.PermissionDenied.String(), status.Code(err).String())
 			}
 		})
 	}
@@ -66,12 +66,12 @@ func (s *RoleBasedAccessServerTestSuite) TestEmptyRolesWithAllRequirement() {
 		canAccess bool
 	}{
 		{
-			name:      "access denied without token",
+			name:      "access denied for unauthenticated",
 			context:   context.Background(),
 			canAccess: false,
 		},
 		{
-			name:      "access denied with token and without no roles",
+			name:      "access denied for authenticated and without roles",
 			context:   testContextWithSubject(interceptor.Subject{}),
 			canAccess: false,
 		},
@@ -83,7 +83,7 @@ func (s *RoleBasedAccessServerTestSuite) TestEmptyRolesWithAllRequirement() {
 			if tt.canAccess {
 				s.NoError(err)
 			} else {
-				s.Equal(codes.PermissionDenied, status.Code(err))
+				s.Equal(codes.PermissionDenied.String(), status.Code(err).String())
 			}
 		})
 	}
@@ -96,7 +96,7 @@ func (s *RoleBasedAccessServerTestSuite) TestMultipleRolesWithAnyRequirement() {
 		canAccess bool
 	}{
 		{
-			name:      "access denied without token",
+			name:      "access denied for unauthenticated",
 			context:   context.Background(),
 			canAccess: false,
 		},
@@ -122,7 +122,7 @@ func (s *RoleBasedAccessServerTestSuite) TestMultipleRolesWithAnyRequirement() {
 			if tt.canAccess {
 				s.NoError(err)
 			} else {
-				s.Equal(codes.PermissionDenied, status.Code(err))
+				s.Equal(codes.PermissionDenied.String(), status.Code(err).String())
 			}
 		})
 	}
@@ -135,7 +135,7 @@ func (s *RoleBasedAccessServerTestSuite) TestMultipleRolesWithAllRequirement() {
 		canAccess bool
 	}{
 		{
-			name:      "access denied without token",
+			name:      "access denied for unauthenticated",
 			context:   context.Background(),
 			canAccess: false,
 		},
@@ -161,7 +161,7 @@ func (s *RoleBasedAccessServerTestSuite) TestMultipleRolesWithAllRequirement() {
 			if tt.canAccess {
 				s.NoError(err)
 			} else {
-				s.Equal(codes.PermissionDenied, status.Code(err))
+				s.Equal(codes.PermissionDenied.String(), status.Code(err).String())
 			}
 		})
 	}

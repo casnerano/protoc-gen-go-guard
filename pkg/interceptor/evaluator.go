@@ -69,6 +69,10 @@ func (i *interceptor) evaluateRule(ctx context.Context, rule *guard.Rule, input 
 }
 
 func (i *interceptor) evaluateRoleBasedAccess(_ context.Context, roleBased *guard.RoleBased, input *Input) (bool, error) {
+	if len(roleBased.Roles) == 0 {
+		return false, nil
+	}
+
 	var matchedRoles int
 	for _, requiredRole := range roleBased.Roles {
 		for _, subjectRole := range input.Subject.Roles {
@@ -90,6 +94,10 @@ func (i *interceptor) evaluateRoleBasedAccess(_ context.Context, roleBased *guar
 }
 
 func (i *interceptor) evaluatePolicyBasedAccess(ctx context.Context, policyBased *guard.PolicyBased, input *Input) (bool, error) {
+	if len(policyBased.Policies) == 0 {
+		return false, nil
+	}
+
 	var matchedPolicies int
 	for _, policyName := range policyBased.Policies {
 		policy, exists := i.policies[policyName]

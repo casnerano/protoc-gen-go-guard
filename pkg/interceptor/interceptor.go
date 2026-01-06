@@ -119,7 +119,7 @@ func (i *interceptor) authorize(ctx context.Context, server any, fullMethod stri
 
 func (i *interceptor) Unary() grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp any, err error) {
-		if err = i.authorize(ctx, req, info.FullMethod, info.Server); err != nil {
+		if err = i.authorize(ctx, info.Server, info.FullMethod, req); err != nil {
 			return nil, err
 		}
 		return handler(ctx, req)
@@ -128,7 +128,7 @@ func (i *interceptor) Unary() grpc.UnaryServerInterceptor {
 
 func (i *interceptor) Stream() grpc.StreamServerInterceptor {
 	return func(srv any, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
-		if err := i.authorize(ss.Context(), nil, info.FullMethod, srv); err != nil {
+		if err := i.authorize(ss.Context(), srv, info.FullMethod, nil); err != nil {
 			return err
 		}
 		return handler(srv, ss)

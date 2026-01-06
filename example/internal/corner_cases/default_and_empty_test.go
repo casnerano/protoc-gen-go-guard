@@ -36,12 +36,12 @@ func (s *DefaultRulesServerTestSuite) TestGetOne() {
 		canAccess bool
 	}{
 		{
-			name:      "access denied without token",
+			name:      "access denied for unauthenticated",
 			context:   context.Background(),
 			canAccess: false,
 		},
 		{
-			name: "access denied with token and roles",
+			name: "access denied for authenticated and with roles",
 			context: testContextWithSubject(interceptor.Subject{
 				Roles: []string{"admin"},
 			}),
@@ -55,7 +55,7 @@ func (s *DefaultRulesServerTestSuite) TestGetOne() {
 			if tt.canAccess {
 				s.NoError(err)
 			} else {
-				s.Equal(codes.PermissionDenied, status.Code(err))
+				s.Equal(codes.PermissionDenied.String(), status.Code(err).String())
 			}
 		})
 	}
@@ -85,12 +85,12 @@ func (s *EmptyServiceRulesServerTestSuite) TestGetOne() {
 		canAccess bool
 	}{
 		{
-			name:      "access denied without token",
+			name:      "access denied for unauthenticated",
 			context:   context.Background(),
 			canAccess: false,
 		},
 		{
-			name: "access denied with token and roles",
+			name: "access denied for authenticated and with roles",
 			context: testContextWithSubject(interceptor.Subject{
 				Roles: []string{"admin", "manager"},
 			}),
@@ -104,7 +104,7 @@ func (s *EmptyServiceRulesServerTestSuite) TestGetOne() {
 			if tt.canAccess {
 				s.NoError(err)
 			} else {
-				s.Equal(codes.PermissionDenied, status.Code(err))
+				s.Equal(codes.PermissionDenied.String(), status.Code(err).String())
 			}
 		})
 	}
@@ -134,12 +134,12 @@ func (s *EmptyMethodRulesServerTestSuite) TestGetOne() {
 		canAccess bool
 	}{
 		{
-			name:      "access denied without token",
+			name:      "access denied for unauthenticated",
 			context:   context.Background(),
 			canAccess: false,
 		},
 		{
-			name: "access denied with token and roles",
+			name: "access denied for authenticated and with roles",
 			context: testContextWithSubject(interceptor.Subject{
 				Roles: []string{"admin", "manager"},
 			}),
@@ -153,7 +153,7 @@ func (s *EmptyMethodRulesServerTestSuite) TestGetOne() {
 			if tt.canAccess {
 				s.NoError(err)
 			} else {
-				s.Equal(codes.PermissionDenied, status.Code(err))
+				s.Equal(codes.PermissionDenied.String(), status.Code(err).String())
 			}
 		})
 	}
@@ -183,12 +183,12 @@ func (s *EmptyServiceAndMethodRulesServerTestSuite) TestGetOne() {
 		canAccess bool
 	}{
 		{
-			name:      "access denied without token",
+			name:      "access denied for unauthenticated",
 			context:   context.Background(),
 			canAccess: false,
 		},
 		{
-			name: "access denied with token and roles",
+			name: "access denied for authenticated and with roles",
 			context: testContextWithSubject(interceptor.Subject{
 				Roles: []string{"admin", "manager"},
 			}),
@@ -202,7 +202,7 @@ func (s *EmptyServiceAndMethodRulesServerTestSuite) TestGetOne() {
 			if tt.canAccess {
 				s.NoError(err)
 			} else {
-				s.Equal(codes.PermissionDenied, status.Code(err))
+				s.Equal(codes.PermissionDenied.String(), status.Code(err).String())
 			}
 		})
 	}

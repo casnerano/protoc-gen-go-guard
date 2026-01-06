@@ -36,7 +36,7 @@ func (s *InheritAndOverrideOneServerTestSuite) TestInheritedMethod() {
 		canAccess bool
 	}{
 		{
-			name:      "access denied without token",
+			name:      "access denied for unauthenticated",
 			context:   context.Background(),
 			canAccess: false,
 		},
@@ -53,7 +53,7 @@ func (s *InheritAndOverrideOneServerTestSuite) TestInheritedMethod() {
 			if tt.canAccess {
 				s.NoError(err)
 			} else {
-				s.Equal(codes.PermissionDenied, status.Code(err))
+				s.Equal(codes.PermissionDenied.String(), status.Code(err).String())
 			}
 		})
 	}
@@ -78,7 +78,7 @@ func (s *InheritAndOverrideOneServerTestSuite) TestOverriddenMethod() {
 			if tt.canAccess {
 				s.NoError(err)
 			} else {
-				s.Equal(codes.PermissionDenied, status.Code(err))
+				s.Equal(codes.PermissionDenied.String(), status.Code(err).String())
 			}
 		})
 	}
@@ -120,7 +120,7 @@ func (s *InheritAndOverrideTwoServerTestSuite) TestInheritedMethod() {
 			if tt.canAccess {
 				s.NoError(err)
 			} else {
-				s.Equal(codes.PermissionDenied, status.Code(err))
+				s.Equal(codes.PermissionDenied.String(), status.Code(err).String())
 			}
 		})
 	}
@@ -133,7 +133,7 @@ func (s *InheritAndOverrideTwoServerTestSuite) TestOverriddenMethod() {
 		canAccess bool
 	}{
 		{
-			name:      "access denied without token",
+			name:      "access denied for unauthenticated",
 			context:   context.Background(),
 			canAccess: false,
 		},
@@ -150,7 +150,7 @@ func (s *InheritAndOverrideTwoServerTestSuite) TestOverriddenMethod() {
 			if tt.canAccess {
 				s.NoError(err)
 			} else {
-				s.Equal(codes.PermissionDenied, status.Code(err))
+				s.Equal(codes.PermissionDenied.String(), status.Code(err).String())
 			}
 		})
 	}
