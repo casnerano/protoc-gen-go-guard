@@ -1,6 +1,6 @@
 LOCAL_BIN := ${CURDIR}/bin
 EXAMPLE_DIR := ${CURDIR}/example
-GO_COVER_EXCLUDE := "example"
+GO_COVER_EXCLUDE := "example|.*\.pb\.go"
 
 .PHONY: download-bin-deps
 download-bin-deps:
