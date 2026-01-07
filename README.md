@@ -2,6 +2,12 @@
 
 Guard gRPC driven by Protobuf contract rules.
 
+
+[![GitHub Release](https://img.shields.io/github/v/release/casnerano/protoc-gen-go-guard?color=green)](https://github.com/casnerano/protoc-gen-go-guard/releases/latest)
+[![Go Report Card](https://goreportcard.com/badge/github.com/casnerano/protoc-gen-go-guard)](https://goreportcard.com/report/github.com/casnerano/protoc-gen-go-guard)
+[![GoDoc](https://pkg.go.dev/badge/github.com/casnerano/protoc-gen-go-guard)](https://godoc.org/github.com/casnerano/protoc-gen-go-guard)
+
+
 ## Features
 
 - Define Guard rules directly in `.proto` files.
@@ -73,18 +79,44 @@ service Auth {
 
 ### 2. Configure interceptor
 ```go
-server := grpc.NewServer(
-  grpc.UnaryInterceptor(guard.Interceptor(
-    func(ctx context.Context) (*guard.AuthContext, error) {
-      // Extract user claims
-      return &guard.AuthContext{Roles: []string{"admin"}}, nil
-    },
-    guard.WithPolicies(map[string]guard.Policy{
-      "owner": func(ctx context.Context, auth *guard.AuthContext, req any) (bool, error) {
-        // Custom policy logic
-        return true, nil
-      }
-    }),
-  )),
+guardInterceptor := interceptor.New(
+    createSubjectResolver(),
+    interceptor.WithPolicies(buildPolicies()),
+    interceptor.WithDebug(),
 )
+
+server := grpc.NewServer(
+    grpc.ChainUnaryInterceptor(
+        guardInterceptor.Unary(),
+    ),
+)
+
+func createSubjectResolver() interceptor.SubjectResolver {
+	return func(ctx context.Context) (*interceptor.Subject, error) {
+		md, ok := metadata.FromIncomingContext(ctx)
+		if !ok {
+			return nil, nil
+		}
+
+		subject := interceptor.Subject{}
+		if roles, exists := md["roles"]; exists {
+			subject.Roles = roles
+		}
+
+		return &subject, nil
+	}
+}
+
+func buildPolicies() interceptor.Policies {
+	return interceptor.Policies{
+		"demo-period": func(ctx context.Context, input *interceptor.Input) (bool, error) {
+			// check demo period with input
+			return true, nil
+		},
+		"premium": func(ctx context.Context, input *interceptor.Input) (bool, error) {
+			// check premium with input
+			return false, nil
+		},
+	}
+}
 ```
