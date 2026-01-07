@@ -7,6 +7,7 @@ import (
 
 	"github.com/casnerano/protoc-gen-go-guard/pkg/guard"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func Test_interceptor_evaluateRules(t *testing.T) {
@@ -95,7 +96,7 @@ func Test_interceptor_evaluateRules(t *testing.T) {
 				return
 			}
 
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.Equal(t, tt.wantAllowed, allowed)
 		})
 	}
@@ -180,7 +181,7 @@ func Test_interceptor_evaluateRule(t *testing.T) {
 			}
 
 			allowed, err := i.evaluateRule(context.Background(), tt.rule, tt.input)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.Equal(t, tt.wantAllowed, allowed)
 		})
 	}
@@ -252,7 +253,7 @@ func Test_interceptor_evaluateRoleBasedAccess(t *testing.T) {
 				return
 			}
 
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.Equal(t, tt.wantAllowed, allowed)
 		})
 	}
@@ -361,7 +362,7 @@ func Test_interceptor_evaluatePolicyBasedAccess(t *testing.T) {
 				return
 			}
 
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.Equal(t, tt.wantAllowed, allowed)
 		})
 	}
