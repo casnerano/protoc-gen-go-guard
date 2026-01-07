@@ -23,13 +23,13 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type UserClient interface {
-	// Overrides service rules - makes method public
+	// Overrides service rules — makes method public
 	GetPublicProfile(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// Inherits service rules (requires authentication)
 	GetPrivateProfile(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	// Overrides service rules - requires ANY matching policy
+	// Overrides service rules — requires passed at least one policy.
 	UpdateProfileStatus(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	// Overrides service rules - requires ALL specified roles
+	// Overrides service rules — requires all specified roles.
 	DeleteProfile(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
@@ -81,13 +81,13 @@ func (c *userClient) DeleteProfile(ctx context.Context, in *emptypb.Empty, opts 
 // All implementations must embed UnimplementedUserServer
 // for forward compatibility
 type UserServer interface {
-	// Overrides service rules - makes method public
+	// Overrides service rules — makes method public
 	GetPublicProfile(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
 	// Inherits service rules (requires authentication)
 	GetPrivateProfile(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
-	// Overrides service rules - requires ANY matching policy
+	// Overrides service rules — requires passed at least one policy.
 	UpdateProfileStatus(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
-	// Overrides service rules - requires ALL specified roles
+	// Overrides service rules — requires all specified roles.
 	DeleteProfile(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
 	mustEmbedUnimplementedUserServer()
 }

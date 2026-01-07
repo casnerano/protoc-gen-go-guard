@@ -43,7 +43,7 @@ func buildPolicies() interceptor.Policies {
 }
 
 func main() {
-	listener, err := net.Listen("tcp", ":9091")
+	listener, err := net.Listen("tcp", "127.0.0.1:9091")
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}

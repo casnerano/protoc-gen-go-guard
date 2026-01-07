@@ -10,6 +10,7 @@ type guardServiceProvider interface {
 	GuardService() *guard.Service
 }
 
+// getGuardService retrieves the guard.Service metadata associated with a gRPC server.
 func (i *interceptor) getGuardService(server any) *guard.Service {
 	provider, ok := server.(guardServiceProvider)
 	if !ok {
@@ -19,6 +20,8 @@ func (i *interceptor) getGuardService(server any) *guard.Service {
 	return provider.GuardService()
 }
 
+// getRules returns the effective access rules for a specific gRPC method.
+// It applies the precedence order: method rules → service rules → default rules.
 func (i *interceptor) getRules(server any, fullMethod string) guard.Rules {
 	service := i.getGuardService(server)
 	if service == nil {

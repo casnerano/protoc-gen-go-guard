@@ -1,3 +1,5 @@
+//go:build integration
+
 package corner_cases
 
 import (
