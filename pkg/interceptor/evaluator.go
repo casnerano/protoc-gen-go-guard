@@ -7,6 +7,8 @@ import (
 	"github.com/casnerano/protoc-gen-go-guard/pkg/guard"
 )
 
+// evaluateRules checks a list of rules in order. Access is granted if any rule allows it.
+// Returns true if access is granted, false if all rules deny access.
 func (i *interceptor) evaluateRules(ctx context.Context, rules guard.Rules, input *Input) (bool, error) {
 	for _, rule := range rules {
 		allowed, err := i.evaluateRule(ctx, rule, input)
@@ -22,6 +24,7 @@ func (i *interceptor) evaluateRules(ctx context.Context, rules guard.Rules, inpu
 	return false, nil
 }
 
+// evaluateRule checks a single rule. Returns true if the rule allows access.
 func (i *interceptor) evaluateRule(ctx context.Context, rule *guard.Rule, input *Input) (bool, error) {
 	if rule.AllowPublic != nil && *rule.AllowPublic {
 		return true, nil
@@ -68,6 +71,8 @@ func (i *interceptor) evaluateRule(ctx context.Context, rule *guard.Rule, input 
 	return false, nil
 }
 
+// evaluateRoleBasedAccess checks if the subject satisfies the role-based conditions.
+// Returns true if access should be granted based on roles.
 func (i *interceptor) evaluateRoleBasedAccess(_ context.Context, roleBased *guard.RoleBased, input *Input) (bool, error) {
 	if len(roleBased.Roles) == 0 {
 		return false, nil
@@ -93,6 +98,11 @@ func (i *interceptor) evaluateRoleBasedAccess(_ context.Context, roleBased *guar
 	}
 }
 
+// evaluateRule checks if a single rule allows access.
+//   - AllowPublic: grants access unconditionally.
+//   - RequireAuthentication: grants access if subject is authenticated.
+//   - AuthenticatedAccess: requires authentication and optionally checks roles and/or policies.
+//     If both roles and policies are specified, both must allow access.
 func (i *interceptor) evaluatePolicyBasedAccess(ctx context.Context, policyBased *guard.PolicyBased, input *Input) (bool, error) {
 	if len(policyBased.Policies) == 0 {
 		return false, nil

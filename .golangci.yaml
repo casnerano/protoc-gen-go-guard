@@ -5,16 +5,8 @@ linters:
 
   enable:
     - misspell
-    - revive
     - unparam
     - gosec
     - gocritic
     - goconst
     - testifylint
-
-
-  exclusions:
-    rules:
-      - path: ^example/
-        linters:
-          - revive

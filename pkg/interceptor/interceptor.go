@@ -1,3 +1,10 @@
+// Package interceptor provides a gRPC server interceptor that enforces
+// access control rules defined in .proto files via protoc-gen-go-guard.
+//
+// Rules are evaluated at runtime based on the current request context,
+// an injected subject resolver, and optional custom policy functions.
+// The default behavior follows a zero-trust model: if no rule explicitly allows access,
+// the request is denied.
 package interceptor
 
 import (
@@ -11,30 +18,43 @@ import (
 )
 
 type (
+	// Subject represents the authenticated principal making the request.
+	// It carries identity attributes such as roles and arbitrary custom data.
 	Subject struct {
 		Roles []string
 		Attrs map[string]any
 	}
 
+	// SubjectResolver is a function that extracts a Subject from the request context.
+	// If the user is unauthenticated, it should return (nil, nil).
+	// Any error returned will cause the interceptor to reject the request with an internal error.
 	SubjectResolver func(ctx context.Context) (*Subject, error)
 )
 
+// Input encapsulates the data available during rule evaluation.
 type Input struct {
-	Request any
-	Subject *Subject
+	Request any      // The original gRPC request message (nil for streaming calls).
+	Subject *Subject // The resolved subject (nil if unauthenticated).
 }
 
+// Authenticated returns true if the request is associated with an authenticated subject.
 func (i *Input) Authenticated() bool {
 	return i.Subject != nil
 }
 
 type (
-	Policy   func(ctx context.Context, input *Input) (bool, error)
+	// Policy is a function that evaluates a custom authorization condition.
+	// It receives the current context and input, and returns whether the policy allows access.
+	// Any error returned will cause the interceptor to reject the request with an internal error.
+	Policy func(ctx context.Context, input *Input) (bool, error)
+	// Policies is a registry of named policy functions referenced in .proto guard rules.
 	Policies map[string]Policy
 )
 
 type (
-	OnErrorHandler        func(ctx context.Context, input *Input, err error)
+	// OnErrorHandler is called when an error occurs during subject resolution or rule evaluation.
+	OnErrorHandler func(ctx context.Context, input *Input, err error)
+	// OnAccessDeniedHandler is called when access is denied by guard rules.
 	OnAccessDeniedHandler func(ctx context.Context, input *Input)
 
 	EventHandlers struct {
@@ -51,6 +71,8 @@ type interceptor struct {
 	subjectResolver SubjectResolver
 }
 
+// New creates a new guard interceptor.
+// It requires a SubjectResolver and accepts optional configuration via Options.
 func New(resolver SubjectResolver, opts ...Option) *interceptor {
 	i := interceptor{
 		subjectResolver: resolver,
@@ -63,6 +85,8 @@ func New(resolver SubjectResolver, opts ...Option) *interceptor {
 	return &i
 }
 
+// authorize evaluates whether the current request is allowed based on the resolved subject
+// and the applicable access rules. Returns nil on success, or a gRPC error on denial/failure.
 func (i *interceptor) authorize(ctx context.Context, server any, fullMethod string, req any) error {
 	input := Input{
 		Request: req,
@@ -117,6 +141,8 @@ func (i *interceptor) authorize(ctx context.Context, server any, fullMethod stri
 	return nil
 }
 
+// Unary returns a grpc.UnaryServerInterceptor that enforces guard rules
+// on unary (request-response) gRPC methods.
 func (i *interceptor) Unary() grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp any, err error) {
 		if err = i.authorize(ctx, info.Server, info.FullMethod, req); err != nil {
@@ -126,6 +152,8 @@ func (i *interceptor) Unary() grpc.UnaryServerInterceptor {
 	}
 }
 
+// Stream returns a grpc.StreamServerInterceptor that enforces guard rules
+// on streaming gRPC methods.
 func (i *interceptor) Stream() grpc.StreamServerInterceptor {
 	return func(srv any, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
 		if err := i.authorize(ss.Context(), srv, info.FullMethod, nil); err != nil {

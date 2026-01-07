@@ -1,3 +1,12 @@
+// Package plugin implements the protoc plugin that generates Go guard definitions
+// from protobuf service and method options.
+//
+// For each .proto file containing gRPC services annotated with guard rules,
+// it produces a corresponding .guard.go file that:
+//   - declares a *guard.Service struct containing the access rules
+//     (both service-level and method-level),
+//   - adds a GuardService() method to the Unimplemented<ServiceName>Server
+//     to allow runtime access to these rules.
 package plugin
 
 import (
@@ -21,25 +30,35 @@ const (
 //go:embed plugin.go.tmpl
 var templateFS embed.FS
 
+// TemplateData holds all the information passed to the Go template
+// that generates the .guard.go output file.
 type TemplateData struct {
-	Meta     Meta
-	File     File
-	Services []*guard.Service
-
-	Test string
+	Meta     Meta             // Build and tooling metadata.
+	File     File             // Information about the source .proto file.
+	Services []*guard.Service // Guard rules for all gRPC services in the file.
 }
 
+// Meta contains version information used in the generated file header.
 type Meta struct {
-	ModuleVersion string
-	ProtocVersion string
+	ModuleVersion string // Version of protoc-gen-go-guard.
+	ProtocVersion string // Version of the protoc compiler used.
 }
 
+// File describes the input .proto file being processed.
 type File struct {
-	Name    string
-	Package string
-	Source  string
+	Name    string // Base name of the generated Go file.
+	Package string // Go package name of the generated code.
+	Source  string // Path to the original .proto source file.
 }
 
+// Execute processes protobuf files passed by protoc and generates .guard.go files.
+// It inspects service and method options for guard rules,
+// converts them into internal guard structures,
+// and renders Go code that embeds these rules and exposes them via a GuardService() method
+// on the corresponding gRPC server base type.
+//
+// The output file is named <prefix>.guard.go and placed in the same package
+// as the generated gRPC code.
 func Execute(plugin *protogen.Plugin) error {
 	tmpl, err := parseTemplate()
 	if err != nil {
@@ -72,7 +91,6 @@ func Execute(plugin *protogen.Plugin) error {
 				Source:  file.Desc.Path(),
 			},
 			Services: services,
-			Test:     fmt.Sprintf("%#v", services),
 		}
 
 		filename := file.GeneratedFilenamePrefix + outputFileSuffix
@@ -84,6 +102,8 @@ func Execute(plugin *protogen.Plugin) error {
 	return nil
 }
 
+// collectServices converts protobuf service descriptors into internal guard.Service structs,
+// extracting explicitly defined service-level rules and method-level rules.
 func collectServices(protoServices []*protogen.Service) []*guard.Service {
 	var services []*guard.Service
 	for _, protoService := range protoServices {
@@ -114,6 +134,8 @@ func collectServices(protoServices []*protogen.Service) []*guard.Service {
 	return services
 }
 
+// collectMethods gathers method-level access rules from protobuf method options
+// and returns a map keyed by method name.
 func collectMethods(protoMethods []*protogen.Method) map[string]*guard.Method {
 	methods := make(map[string]*guard.Method)
 
@@ -135,6 +157,7 @@ func collectMethods(protoMethods []*protogen.Method) map[string]*guard.Method {
 	return methods
 }
 
+// extractRule translates a protobuf-defined Rule message into the internal guard.Rule representation.
 func extractRule(pbRule *desc.Rule) *guard.Rule {
 	rule := guard.Rule{}
 
@@ -178,6 +201,7 @@ func extractRule(pbRule *desc.Rule) *guard.Rule {
 	return &rule
 }
 
+// parseTemplate loads and parses the embedded Go template used to generate .guard.go files.
 func parseTemplate() (*template.Template, error) {
 	templateContent, err := templateFS.ReadFile("plugin.go.tmpl")
 	if err != nil {
