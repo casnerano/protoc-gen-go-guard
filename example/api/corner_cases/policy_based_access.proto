@@ -34,7 +34,7 @@ service PolicyBasedAccess {
     option (guard.method_rules) = {
       authenticated_access: {
         policy_based: {
-          policies: ["policy1", "policy2"],
+          policies: ["positive-policy-1", "negative-policy-1"],
           match: AT_LEAST_ONE
         }
       }
@@ -45,7 +45,7 @@ service PolicyBasedAccess {
     option (guard.method_rules) = {
       authenticated_access: {
         policy_based: {
-          policies: ["policy1", "policy2"],
+          policies: ["positive-policy-1", "negative-policy-1"],
           match: ALL
         }
       }

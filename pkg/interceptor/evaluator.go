@@ -2,9 +2,14 @@ package interceptor
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/casnerano/protoc-gen-go-guard/pkg/guard"
+)
+
+var (
+	ErrPolicyUndefined = errors.New("policy undefined")
 )
 
 // evaluateRules checks a list of rules in order. Access is granted if any rule allows it.
@@ -112,7 +117,11 @@ func (i *Interceptor) evaluatePolicyBasedAccess(ctx context.Context, policyBased
 	for _, policyName := range policyBased.Policies {
 		policy, exists := i.policies[policyName]
 		if !exists {
-			continue
+			return false, fmt.Errorf("policy %q not defined: %w", policyName, ErrPolicyUndefined)
+		}
+
+		if policy == nil {
+			return false, nil
 		}
 
 		allowed, err := policy(ctx, input)

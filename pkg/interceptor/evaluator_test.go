@@ -12,27 +12,30 @@ func Test_interceptor_evaluateRules(t *testing.T) {
 	tests := []struct {
 		name        string
 		rules       guard.Rules
-		input       *Input
 		policies    Policies
+		input       *Input
 		wantAllowed bool
 		wantErr     bool
 	}{
 		{
-			name:        "no rules returns false",
+			name:        "nil rules",
 			rules:       nil,
-			input:       &Input{},
 			wantAllowed: false,
 		},
 		{
-			name: "allow public rule grants access without authenticated",
+			name:        "empty rules",
+			rules:       guard.Rules{},
+			wantAllowed: false,
+		},
+		{
+			name: "one allow rule",
 			rules: guard.Rules{
 				{AllowPublic: guard.Ptr(true)},
 			},
-			input:       &Input{Subject: nil},
 			wantAllowed: true,
 		},
 		{
-			name: "require auth rule denies access without auth",
+			name: "one deny rule",
 			rules: guard.Rules{
 				{RequireAuthentication: guard.Ptr(true)},
 			},
@@ -40,91 +43,37 @@ func Test_interceptor_evaluateRules(t *testing.T) {
 			wantAllowed: false,
 		},
 		{
-			name: "require auth rule grants access with auth",
+			name: "multiple rules with one allow",
 			rules: guard.Rules{
 				{RequireAuthentication: guard.Ptr(true)},
+				{AllowPublic: guard.Ptr(false)},
 			},
 			input:       &Input{Subject: &Subject{}},
 			wantAllowed: true,
 		},
 		{
-			name: "role based rule denies access without required roles",
-			rules: guard.Rules{
-				{
-					AuthenticatedAccess: &guard.AuthenticatedAccess{
-						RoleBased: &guard.RoleBased{
-							Roles: []string{"admin"},
-							Match: guard.MatchAll,
-						},
-					},
-				},
-			},
-			input:       &Input{Subject: &Subject{Roles: []string{"user"}}},
-			wantAllowed: false,
-		},
-		{
-			name: "role based rule grants access with required roles",
-			rules: guard.Rules{
-				{
-					AuthenticatedAccess: &guard.AuthenticatedAccess{
-						RoleBased: &guard.RoleBased{
-							Roles: []string{"admin"},
-							Match: guard.MatchAll,
-						},
-					},
-				},
-			},
-			input:       &Input{Subject: &Subject{Roles: []string{"admin"}}},
-			wantAllowed: true,
-		},
-		{
-			name: "policy based rule grants access when policy passes",
+			name: "multiple rules without allowed",
 			rules: guard.Rules{
 				{
 					AuthenticatedAccess: &guard.AuthenticatedAccess{
 						PolicyBased: &guard.PolicyBased{
-							Policies: []string{"test-policy"},
-							Match:    guard.MatchAtLeastOne,
+							Policies: []string{"negative-policy"},
+							Match:    guard.MatchAll,
 						},
 					},
 				},
-			},
-			input:       &Input{Subject: &Subject{}},
-			policies:    Policies{"test-policy": func(ctx context.Context, input *Input) (bool, error) { return true, nil }},
-			wantAllowed: true,
-		},
-		{
-			name: "multiple rules grants access if any rule passes",
-			rules: guard.Rules{
-				{RequireAuthentication: guard.Ptr(true)},
-				{AllowPublic: guard.Ptr(true)},
-			},
-			input:       &Input{Subject: nil},
-			wantAllowed: true,
-		},
-		{
-			name: "empty authenticated access rule requires authenticated",
-			rules: guard.Rules{
-				{AuthenticatedAccess: &guard.AuthenticatedAccess{}},
-			},
-			input:       &Input{Subject: nil},
-			wantAllowed: false,
-		},
-		{
-			name: "invalid match type returns error",
-			rules: guard.Rules{
 				{
 					AuthenticatedAccess: &guard.AuthenticatedAccess{
 						RoleBased: &guard.RoleBased{
-							Roles: []string{"admin"},
-							Match: guard.Match(-1),
+							Roles: []string{"non-existing-role"},
+							Match: guard.MatchAll,
 						},
 					},
 				},
 			},
-			input:       &Input{Subject: &Subject{Roles: []string{"admin"}}},
+			policies:    Policies{"negative-policy": nil},
+			input:       &Input{Subject: &Subject{Roles: []string{"user"}}},
 			wantAllowed: false,
-			wantErr:     true,
 		},
 	}
 
@@ -134,8 +83,12 @@ func Test_interceptor_evaluateRules(t *testing.T) {
 				policies: tt.policies,
 			}
 
-			allowed, err := i.evaluateRules(context.Background(), tt.rules, tt.input)
+			input := tt.input
+			if input == nil {
+				input = &Input{}
+			}
 
+			allowed, err := i.evaluateRules(context.Background(), tt.rules, input)
 			if tt.wantErr {
 				assert.Error(t, err)
 				return

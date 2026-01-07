@@ -63,7 +63,7 @@ func (s *PolicyBasedAccessTestsSuite) TestMultiplePoliciesWithAllRequirement() {
 		canAccess bool
 	}{
 		{
-			name:      "access denied for authenticated and empty policies with all matching",
+			name:      "access denied for authenticated and not all policies passed",
 			context:   testContextWithSubject(interceptor.Subject{}),
 			canAccess: false,
 		},
@@ -72,6 +72,31 @@ func (s *PolicyBasedAccessTestsSuite) TestMultiplePoliciesWithAllRequirement() {
 	for _, tt := range testCases {
 		s.Run(tt.name, func() {
 			_, err := s.client.MultiplePoliciesWithAllRequirement(tt.context, &emptypb.Empty{})
+			if tt.canAccess {
+				s.NoError(err)
+			} else {
+				s.Equal(codes.PermissionDenied.String(), status.Code(err).String())
+			}
+		})
+	}
+}
+
+func (s *PolicyBasedAccessTestsSuite) TestMultiplePoliciesWithAnyRequirement() {
+	testCases := []struct {
+		name      string
+		context   context.Context
+		canAccess bool
+	}{
+		{
+			name:      "access denied for authenticated and not all policies passed",
+			context:   testContextWithSubject(interceptor.Subject{}),
+			canAccess: true,
+		},
+	}
+
+	for _, tt := range testCases {
+		s.Run(tt.name, func() {
+			_, err := s.client.MultiplePoliciesWithAnyRequirement(tt.context, &emptypb.Empty{})
 			if tt.canAccess {
 				s.NoError(err)
 			} else {
