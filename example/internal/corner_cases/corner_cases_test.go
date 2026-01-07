@@ -25,10 +25,10 @@ func (g *CornerCasesServerTestSuite) SetupSuite() {
 
 	g.server = grpc.NewServer(
 		grpc.UnaryInterceptor(
-			interceptor.GuardUnary(
-				testAuthContextResolver(),
+			interceptor.New(
+				testSubjectResolver(),
 				interceptor.WithPolicies(testPolicies()),
-			),
+			).Unary(),
 		),
 	)
 }
@@ -61,63 +61,44 @@ func (g *CornerCasesServerTestSuite) GetClientConn() (*grpc.ClientConn, error) {
 	)
 }
 
-//func testRegisterServers(server *grpc.Server) {
-//	desc.RegisterDefaultRulesServer(server, &DefaultRulesServer{})
-//	desc.RegisterEmptyServiceRulesServer(server, &EmptyServiceRulesServer{})
-//	desc.RegisterEmptyMethodRulesServer(server, &EmptyMethodRulesServer{})
-//	desc.RegisterEmptyServiceAndMethodRulesServer(server, &EmptyServiceAndMethodRulesServer{})
-//
-//	desc.RegisterInheritAndOverrideOneServer(server, &InheritAndOverrideOneServer{})
-//	desc.RegisterInheritAndOverrideTwoServer(server, &InheritAndOverrideTwoServer{})
-//
-//	desc.RegisterMixedTypesAccessServer(server, &MixedTypesAccessServer{})
-//
-//	desc.RegisterPolicyBasedAccessServer(server, &PolicyBasedAccessServer{})
-//	desc.RegisterRoleBasedAccessServer(server, &RoleBasedAccessServer{})
-//}
-
-func testAuthContextResolver() interceptor.AuthContextResolver {
-	return func(ctx context.Context) (*interceptor.AuthContext, error) {
+func testSubjectResolver() interceptor.SubjectResolver {
+	return func(ctx context.Context) (*interceptor.Subject, error) {
 		md, ok := metadata.FromIncomingContext(ctx)
 		if !ok {
-			return &interceptor.AuthContext{}, nil
+			return nil, nil
 		}
 
-		authContext := interceptor.AuthContext{}
-
-		if authorization, exists := md["authorization"]; exists && len(authorization) > 0 {
-			authContext.Authenticated = true
+		if _, authenticated := md["authenticated"]; !authenticated {
+			return nil, nil
 		}
 
-		if roles, exists := md["roles"]; exists && len(roles) > 0 {
-			authContext.Roles = roles
+		subject := interceptor.Subject{}
+		if roles, exists := md["roles"]; exists {
+			subject.Roles = roles
 		}
 
-		return &authContext, nil
+		return &subject, nil
 	}
+}
+
+func testContextWithSubject(subject interceptor.Subject) context.Context {
+	md := metadata.MD{}
+	md.Append("authenticated", "1")
+	md.Append("roles", subject.Roles...)
+
+	return metadata.NewOutgoingContext(context.Background(), md)
 }
 
 func testPolicies() interceptor.Policies {
 	return interceptor.Policies{
-		"positive-policy-1": func(ctx context.Context, authContext *interceptor.AuthContext, request interface{}) (bool, error) {
+		"positive-policy-1": func(ctx context.Context, input *interceptor.Input) (bool, error) {
 			return true, nil
 		},
-		"positive-policy-2": func(ctx context.Context, authContext *interceptor.AuthContext, request interface{}) (bool, error) {
+		"positive-policy-2": func(ctx context.Context, input *interceptor.Input) (bool, error) {
 			return true, nil
 		},
-		"negative-policy-1": func(ctx context.Context, authContext *interceptor.AuthContext, request interface{}) (bool, error) {
+		"negative-policy-1": func(ctx context.Context, input *interceptor.Input) (bool, error) {
 			return false, nil
 		},
 	}
-}
-
-func testContextWithMetadata(token string, roles ...string) context.Context {
-	md := metadata.MD{}
-	md.Append("authorization", token)
-
-	if len(roles) > 0 {
-		md.Append("roles", roles...)
-	}
-
-	return metadata.NewOutgoingContext(context.Background(), md)
 }

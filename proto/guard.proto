@@ -6,33 +6,38 @@ option go_package = "github.com/casnerano/protoc-gen-go-guard/proto;guard";
 
 import "google/protobuf/descriptor.proto";
 
-enum Requirement {
-  ANY = 0;
+enum Match {
+  AT_LEAST_ONE = 0;
   ALL = 1;
 }
 
 message RoleBased {
-  repeated string allowed_roles = 1;
-  optional Requirement requirement = 2;
-}
-message PolicyBased {
-  repeated string policy_names = 1;
-  optional Requirement requirement = 2;
+  repeated string roles = 1;
+  optional Match match = 2;
 }
 
-message Rules {
-  oneof OneOf {
+message PolicyBased {
+  repeated string policies = 1;
+  optional Match match = 2;
+}
+
+message Rule {
+  oneof mode {
     bool allow_public = 1;
     bool require_authentication = 2;
-    RoleBased role_based = 3;
-    PolicyBased policy_based = 4;
+    AuthenticatedAccess authenticated_access = 3;
   }
 }
 
+message AuthenticatedAccess {
+  RoleBased role_based = 1;
+  PolicyBased policy_based = 2;
+}
+
 extend google.protobuf.ServiceOptions {
-  Rules service_rules = 50001;
+  repeated Rule service_rules = 50001;
 }
 
 extend google.protobuf.MethodOptions {
-  Rules method_rules = 50002;
+  repeated Rule method_rules = 50002;
 }

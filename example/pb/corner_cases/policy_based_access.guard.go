@@ -14,32 +14,49 @@ var guardService_PolicyBasedAccess = guard.Service{
 	Name: "PolicyBasedAccess",
 	Methods: map[string]*guard.Method{
 		"EmptyPoliciesWithAllRequirement": {
-			Rules: &guard.Rules{
-				PolicyBased: &guard.PolicyBased{},
+			Rules: []*guard.Rule{
+				{
+					AuthenticatedAccess: &guard.AuthenticatedAccess{
+						PolicyBased: &guard.PolicyBased{
+							Policies: []string{},
+							Match:    guard.Match(1),
+						},
+					},
+				},
 			},
 		},
 		"EmptyPoliciesWithAnyRequirement": {
-			Rules: &guard.Rules{
-				PolicyBased: &guard.PolicyBased{},
+			Rules: []*guard.Rule{
+				{
+					AuthenticatedAccess: &guard.AuthenticatedAccess{
+						PolicyBased: &guard.PolicyBased{
+							Policies: []string{},
+							Match:    guard.Match(0),
+						},
+					},
+				},
 			},
 		},
 		"MultiplePoliciesWithAllRequirement": {
-			Rules: &guard.Rules{
-				PolicyBased: &guard.PolicyBased{
-					PolicyNames: []string{
-						"policy1",
-						"policy2",
+			Rules: []*guard.Rule{
+				{
+					AuthenticatedAccess: &guard.AuthenticatedAccess{
+						PolicyBased: &guard.PolicyBased{
+							Policies: []string{"policy1", "policy2"},
+							Match:    guard.Match(1),
+						},
 					},
-					Requirement: guard.Requirement(1),
 				},
 			},
 		},
 		"MultiplePoliciesWithAnyRequirement": {
-			Rules: &guard.Rules{
-				PolicyBased: &guard.PolicyBased{
-					PolicyNames: []string{
-						"policy1",
-						"policy2",
+			Rules: []*guard.Rule{
+				{
+					AuthenticatedAccess: &guard.AuthenticatedAccess{
+						PolicyBased: &guard.PolicyBased{
+							Policies: []string{"policy1", "policy2"},
+							Match:    guard.Match(0),
+						},
 					},
 				},
 			},
@@ -47,6 +64,6 @@ var guardService_PolicyBasedAccess = guard.Service{
 	},
 }
 
-func (UnimplementedPolicyBasedAccessServer) GetGuardService() *guard.Service {
+func (UnimplementedPolicyBasedAccessServer) GuardService() *guard.Service {
 	return &guardService_PolicyBasedAccess
 }

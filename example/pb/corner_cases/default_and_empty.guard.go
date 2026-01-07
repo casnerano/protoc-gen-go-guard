@@ -11,12 +11,14 @@ import (
 )
 
 var guardService_EmptyServiceRules = guard.Service{
-	Name:    "EmptyServiceRules",
-	Rules:   &guard.Rules{},
+	Name: "EmptyServiceRules",
+	Rules: []*guard.Rule{
+		{},
+	},
 	Methods: map[string]*guard.Method{},
 }
 
-func (UnimplementedEmptyServiceRulesServer) GetGuardService() *guard.Service {
+func (UnimplementedEmptyServiceRulesServer) GuardService() *guard.Service {
 	return &guardService_EmptyServiceRules
 }
 
@@ -24,25 +26,31 @@ var guardService_EmptyMethodRules = guard.Service{
 	Name: "EmptyMethodRules",
 	Methods: map[string]*guard.Method{
 		"GetOne": {
-			Rules: &guard.Rules{},
+			Rules: []*guard.Rule{
+				{},
+			},
 		},
 	},
 }
 
-func (UnimplementedEmptyMethodRulesServer) GetGuardService() *guard.Service {
+func (UnimplementedEmptyMethodRulesServer) GuardService() *guard.Service {
 	return &guardService_EmptyMethodRules
 }
 
 var guardService_EmptyServiceAndMethodRules = guard.Service{
-	Name:  "EmptyServiceAndMethodRules",
-	Rules: &guard.Rules{},
+	Name: "EmptyServiceAndMethodRules",
+	Rules: []*guard.Rule{
+		{},
+	},
 	Methods: map[string]*guard.Method{
 		"GetOne": {
-			Rules: &guard.Rules{},
+			Rules: []*guard.Rule{
+				{},
+			},
 		},
 	},
 }
 
-func (UnimplementedEmptyServiceAndMethodRulesServer) GetGuardService() *guard.Service {
+func (UnimplementedEmptyServiceAndMethodRulesServer) GuardService() *guard.Service {
 	return &guardService_EmptyServiceAndMethodRules
 }

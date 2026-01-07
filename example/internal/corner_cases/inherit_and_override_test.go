@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	desc "github.com/casnerano/protoc-gen-go-guard/example/pb/corner_cases"
+	"github.com/casnerano/protoc-gen-go-guard/pkg/interceptor"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -13,6 +14,7 @@ import (
 
 type InheritAndOverrideOneServerTestSuite struct {
 	CornerCasesServerTestSuite
+
 	client desc.InheritAndOverrideOneClient
 }
 
@@ -34,13 +36,13 @@ func (s *InheritAndOverrideOneServerTestSuite) TestInheritedMethod() {
 		canAccess bool
 	}{
 		{
-			name:      "access denied without token",
+			name:      "access denied for unauthenticated",
 			context:   context.Background(),
 			canAccess: false,
 		},
 		{
-			name:      "access denied with token",
-			context:   testContextWithMetadata("test-token"),
+			name:      "access denied for authenticated",
+			context:   testContextWithSubject(interceptor.Subject{}),
 			canAccess: false,
 		},
 	}
@@ -51,7 +53,7 @@ func (s *InheritAndOverrideOneServerTestSuite) TestInheritedMethod() {
 			if tt.canAccess {
 				s.NoError(err)
 			} else {
-				s.Equal(codes.PermissionDenied, status.Code(err))
+				s.Equal(codes.PermissionDenied.String(), status.Code(err).String())
 			}
 		})
 	}
@@ -64,7 +66,7 @@ func (s *InheritAndOverrideOneServerTestSuite) TestOverriddenMethod() {
 		canAccess bool
 	}{
 		{
-			name:      "access allowed without token",
+			name:      "access allowed for unauthenticated",
 			context:   context.Background(),
 			canAccess: true,
 		},
@@ -76,7 +78,7 @@ func (s *InheritAndOverrideOneServerTestSuite) TestOverriddenMethod() {
 			if tt.canAccess {
 				s.NoError(err)
 			} else {
-				s.Equal(codes.PermissionDenied, status.Code(err))
+				s.Equal(codes.PermissionDenied.String(), status.Code(err).String())
 			}
 		})
 	}
@@ -84,6 +86,7 @@ func (s *InheritAndOverrideOneServerTestSuite) TestOverriddenMethod() {
 
 type InheritAndOverrideTwoServerTestSuite struct {
 	CornerCasesServerTestSuite
+
 	client desc.InheritAndOverrideTwoClient
 }
 
@@ -105,7 +108,7 @@ func (s *InheritAndOverrideTwoServerTestSuite) TestInheritedMethod() {
 		canAccess bool
 	}{
 		{
-			name:      "access allowed without token",
+			name:      "access allowed for unauthenticated",
 			context:   context.Background(),
 			canAccess: true,
 		},
@@ -117,7 +120,7 @@ func (s *InheritAndOverrideTwoServerTestSuite) TestInheritedMethod() {
 			if tt.canAccess {
 				s.NoError(err)
 			} else {
-				s.Equal(codes.PermissionDenied, status.Code(err))
+				s.Equal(codes.PermissionDenied.String(), status.Code(err).String())
 			}
 		})
 	}
@@ -130,13 +133,13 @@ func (s *InheritAndOverrideTwoServerTestSuite) TestOverriddenMethod() {
 		canAccess bool
 	}{
 		{
-			name:      "access denied without token",
+			name:      "access denied for unauthenticated",
 			context:   context.Background(),
 			canAccess: false,
 		},
 		{
-			name:      "access denied with token",
-			context:   testContextWithMetadata("test-token"),
+			name:      "access denied for authenticated",
+			context:   testContextWithSubject(interceptor.Subject{}),
 			canAccess: false,
 		},
 	}
@@ -147,7 +150,7 @@ func (s *InheritAndOverrideTwoServerTestSuite) TestOverriddenMethod() {
 			if tt.canAccess {
 				s.NoError(err)
 			} else {
-				s.Equal(codes.PermissionDenied, status.Code(err))
+				s.Equal(codes.PermissionDenied.String(), status.Code(err).String())
 			}
 		})
 	}

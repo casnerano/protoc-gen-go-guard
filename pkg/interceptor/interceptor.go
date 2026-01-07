@@ -2,8 +2,7 @@ package interceptor
 
 import (
 	"context"
-	"fmt"
-	"path"
+	"log"
 
 	"github.com/casnerano/protoc-gen-go-guard/pkg/guard"
 	"google.golang.org/grpc"
@@ -11,87 +10,127 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-type guardServiceProvider interface {
-	GetGuardService() *guard.Service
+type (
+	Subject struct {
+		Roles []string
+		Attrs map[string]any
+	}
+
+	SubjectResolver func(ctx context.Context) (*Subject, error)
+)
+
+type Input struct {
+	Request any
+	Subject *Subject
 }
 
-type evaluator interface {
-	Evaluate(ctx context.Context, rules *guard.Rules, authContext *AuthContext, request any) (bool, error)
+func (i *Input) Authenticated() bool {
+	return i.Subject != nil
 }
 
-type AuthContext struct {
-	Authenticated bool
-	Roles         []string
-	Metadata      map[string]any
+type (
+	Policy   func(ctx context.Context, input *Input) (bool, error)
+	Policies map[string]Policy
+)
+
+type (
+	OnErrorHandler        func(ctx context.Context, input *Input, err error)
+	OnAccessDeniedHandler func(ctx context.Context, input *Input)
+
+	EventHandlers struct {
+		OnError        OnErrorHandler
+		OnAccessDenied OnAccessDeniedHandler
+	}
+)
+
+type interceptor struct {
+	debug           bool
+	policies        Policies
+	defaultRules    guard.Rules
+	eventHandlers   EventHandlers
+	subjectResolver SubjectResolver
 }
 
-type AuthContextResolver func(ctx context.Context) (*AuthContext, error)
-
-func GuardUnary(authContextResolver AuthContextResolver, opts ...Option) grpc.UnaryServerInterceptor {
-	guardOptions := &options{}
+func New(resolver SubjectResolver, opts ...Option) *interceptor {
+	i := interceptor{
+		subjectResolver: resolver,
+	}
 
 	for _, opt := range opts {
-		opt(guardOptions)
+		opt(&i)
 	}
 
-	evaluators := map[evaluatorType]evaluator{
-		evaluatorTypeAllowPublic:  newAllowedPublicEvaluator(),
-		evaluatorTypeRequireAuthn: newRequireAuthnEvaluator(),
-		evaluatorTypeRoleBased:    newRoleBasedEvaluator(),
+	return &i
+}
+
+func (i *interceptor) authorize(ctx context.Context, server any, fullMethod string, req any) error {
+	input := Input{
+		Request: req,
 	}
 
-	if guardOptions.policies != nil {
-		evaluators[evaluatorTypePolicyBased] = newPolicyBasedEvaluator(guardOptions.policies)
-	}
-
-	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
-		if provider, ok := info.Server.(guardServiceProvider); ok {
-			rules := findRulesForService(provider.GetGuardService(), info.FullMethod)
-
-			if rules == nil {
-				return nil, status.Error(codes.PermissionDenied, codes.PermissionDenied.String())
-			}
-
-			selectedEvaluatorType := getEvaluatorType(rules)
-
-			if selectedEvaluatorType == evaluatorTypeUnknown {
-				return nil, status.Error(codes.PermissionDenied, codes.PermissionDenied.String())
-			}
-
-			authContext, err := authContextResolver(ctx)
-			if err != nil {
-				return nil, status.Error(codes.Internal, fmt.Sprintf("failed resolve auth context: %s", err))
-			}
-
-			selectedEvaluator, exists := evaluators[selectedEvaluatorType]
-			if !exists {
-				return nil, status.Error(codes.Internal, "failed evaluators configuration")
-			}
-
-			allowed, err := selectedEvaluator.Evaluate(ctx, rules, authContext, req)
-			if err != nil {
-				return nil, status.Error(codes.Internal, fmt.Sprintf("failed evaluate access for method %q: %s", info.FullMethod, err))
-			}
-
-			if !allowed {
-				return nil, status.Error(codes.PermissionDenied, codes.PermissionDenied.String())
-			}
-
-			return handler(ctx, req)
+	subject, err := i.subjectResolver(ctx)
+	if err != nil {
+		if i.debug {
+			log.Printf("Failed to resolve subject for %s: %v", fullMethod, err)
 		}
 
-		return nil, status.Error(codes.PermissionDenied, codes.PermissionDenied.String())
+		if i.eventHandlers.OnError != nil {
+			i.eventHandlers.OnError(ctx, &input, err)
+		}
+
+		return status.Error(codes.Internal, "failed to resolve subject")
+	}
+
+	input.Subject = subject
+
+	rules := i.getRules(server, fullMethod)
+
+	allowed, err := i.evaluateRules(ctx, rules, &input)
+	if err != nil {
+		if i.debug {
+			log.Printf("Evaluation error for %s: %v", fullMethod, err)
+		}
+
+		if i.eventHandlers.OnError != nil {
+			i.eventHandlers.OnError(ctx, &input, err)
+		}
+
+		return status.Error(codes.Internal, "evaluation error")
+	}
+
+	if !allowed {
+		if i.debug {
+			log.Printf("Access denied for %s", fullMethod)
+		}
+
+		if i.eventHandlers.OnAccessDenied != nil {
+			i.eventHandlers.OnAccessDenied(ctx, &input)
+		}
+
+		return status.Error(codes.PermissionDenied, codes.PermissionDenied.String())
+	}
+
+	if i.debug {
+		log.Printf("Access granted for %s", fullMethod)
+	}
+
+	return nil
+}
+
+func (i *interceptor) Unary() grpc.UnaryServerInterceptor {
+	return func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp any, err error) {
+		if err = i.authorize(ctx, info.Server, info.FullMethod, req); err != nil {
+			return nil, err
+		}
+		return handler(ctx, req)
 	}
 }
 
-func findRulesForService(service *guard.Service, fullMethod string) *guard.Rules {
-	if service == nil {
-		return nil
+func (i *interceptor) Stream() grpc.StreamServerInterceptor {
+	return func(srv any, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
+		if err := i.authorize(ss.Context(), srv, info.FullMethod, nil); err != nil {
+			return err
+		}
+		return handler(srv, ss)
 	}
-
-	if method, exists := service.Methods[path.Base(fullMethod)]; exists && method.Rules != nil {
-		return method.Rules
-	}
-
-	return service.Rules
 }

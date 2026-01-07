@@ -92,8 +92,11 @@ func collectServices(protoServices []*protogen.Service) []*guard.Service {
 		}
 
 		if options := protoService.Desc.Options().(*descriptorpb.ServiceOptions); options != nil {
-			if protoServiceRules := proto.GetExtension(options, desc.E_ServiceRules).(*desc.Rules); protoServiceRules != nil {
-				service.Rules = extractSelectedRules(protoServiceRules)
+			if pbRules, ok := proto.GetExtension(options, desc.E_ServiceRules).([]*desc.Rule); ok {
+				service.Rules = make([]*guard.Rule, 0, len(pbRules))
+				for _, pbRule := range pbRules {
+					service.Rules = append(service.Rules, extractRule(pbRule))
+				}
 			}
 		}
 
@@ -101,7 +104,7 @@ func collectServices(protoServices []*protogen.Service) []*guard.Service {
 			service.Methods = methods
 		}
 
-		if service.Rules == nil && service.Methods == nil {
+		if len(service.Rules) == 0 && len(service.Methods) == 0 {
 			continue
 		}
 
@@ -116,9 +119,14 @@ func collectMethods(protoMethods []*protogen.Method) map[string]*guard.Method {
 
 	for _, protoMethod := range protoMethods {
 		if options := protoMethod.Desc.Options().(*descriptorpb.MethodOptions); options != nil {
-			if protoMethodRules := proto.GetExtension(options, desc.E_MethodRules).(*desc.Rules); protoMethodRules != nil {
+			if pbRules, ok := proto.GetExtension(options, desc.E_MethodRules).([]*desc.Rule); ok {
+				guardRules := make([]*guard.Rule, 0, len(pbRules))
+				for _, pbRule := range pbRules {
+					guardRules = append(guardRules, extractRule(pbRule))
+				}
+
 				methods[string(protoMethod.Desc.Name())] = &guard.Method{
-					Rules: extractSelectedRules(protoMethodRules),
+					Rules: guardRules,
 				}
 			}
 		}
@@ -127,39 +135,47 @@ func collectMethods(protoMethods []*protogen.Method) map[string]*guard.Method {
 	return methods
 }
 
-func extractSelectedRules(descRules *desc.Rules) *guard.Rules {
-	guardRules := guard.Rules{}
+func extractRule(pbRule *desc.Rule) *guard.Rule {
+	rule := guard.Rule{}
 
-	switch selectedRules := descRules.OneOf.(type) {
-	case *desc.Rules_AllowPublic:
-		guardRules.AllowPublic = &selectedRules.AllowPublic
-	case *desc.Rules_RequireAuthentication:
-		guardRules.RequireAuthn = &selectedRules.RequireAuthentication
-	case *desc.Rules_RoleBased:
-		if selectedRules.RoleBased != nil {
-			guardRules.RoleBased = &guard.RoleBased{
-				AllowedRoles: selectedRules.RoleBased.AllowedRoles,
-				Requirement:  guard.RequirementAny,
+	switch mode := pbRule.Mode.(type) {
+	case *desc.Rule_AllowPublic:
+		rule.AllowPublic = &mode.AllowPublic
+
+	case *desc.Rule_RequireAuthentication:
+		rule.RequireAuthentication = &mode.RequireAuthentication
+
+	case *desc.Rule_AuthenticatedAccess:
+		if mode.AuthenticatedAccess != nil {
+			authenticatedAccess := &guard.AuthenticatedAccess{}
+
+			if roleBased := mode.AuthenticatedAccess.RoleBased; roleBased != nil {
+				authenticatedAccess.RoleBased = &guard.RoleBased{
+					Roles: roleBased.Roles,
+					Match: guard.MatchAtLeastOne,
+				}
+
+				if roleBased.Match != nil {
+					authenticatedAccess.RoleBased.Match = guard.Match(*roleBased.Match)
+				}
 			}
 
-			if requirement := selectedRules.RoleBased.Requirement; requirement != nil {
-				guardRules.RoleBased.Requirement = guard.Requirement(*requirement)
-			}
-		}
-	case *desc.Rules_PolicyBased:
-		if selectedRules.PolicyBased != nil {
-			guardRules.PolicyBased = &guard.PolicyBased{
-				PolicyNames: selectedRules.PolicyBased.PolicyNames,
-				Requirement: guard.RequirementAll,
+			if policyBased := mode.AuthenticatedAccess.PolicyBased; policyBased != nil {
+				authenticatedAccess.PolicyBased = &guard.PolicyBased{
+					Policies: policyBased.Policies,
+					Match:    guard.MatchAtLeastOne,
+				}
+
+				if policyBased.Match != nil {
+					authenticatedAccess.PolicyBased.Match = guard.Match(*policyBased.Match)
+				}
 			}
 
-			if requirement := selectedRules.PolicyBased.Requirement; requirement != nil {
-				guardRules.PolicyBased.Requirement = guard.Requirement(*requirement)
-			}
+			rule.AuthenticatedAccess = authenticatedAccess
 		}
 	}
 
-	return &guardRules
+	return &rule
 }
 
 func parseTemplate() (*template.Template, error) {

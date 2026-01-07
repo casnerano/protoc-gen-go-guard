@@ -11,17 +11,23 @@ import (
 )
 
 var guardService_Auth = guard.Service{
-	Name:  "Auth",
-	Rules: &guard.Rules{},
+	Name: "Auth",
+	Rules: []*guard.Rule{
+		{
+			AllowPublic: guard.Ptr(true),
+		},
+	},
 	Methods: map[string]*guard.Method{
 		"Logout": {
-			Rules: &guard.Rules{
-				RequireAuthn: guard.Ptr(true),
+			Rules: []*guard.Rule{
+				{
+					RequireAuthentication: guard.Ptr(true),
+				},
 			},
 		},
 	},
 }
 
-func (UnimplementedAuthServer) GetGuardService() *guard.Service {
+func (UnimplementedAuthServer) GuardService() *guard.Service {
 	return &guardService_Auth
 }

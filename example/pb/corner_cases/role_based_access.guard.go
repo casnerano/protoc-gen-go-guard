@@ -14,32 +14,49 @@ var guardService_RoleBasedAccess = guard.Service{
 	Name: "RoleBasedAccess",
 	Methods: map[string]*guard.Method{
 		"EmptyRolesWithAllRequirement": {
-			Rules: &guard.Rules{
-				RoleBased: &guard.RoleBased{},
+			Rules: []*guard.Rule{
+				{
+					AuthenticatedAccess: &guard.AuthenticatedAccess{
+						RoleBased: &guard.RoleBased{
+							Roles: []string{},
+							Match: guard.Match(1),
+						},
+					},
+				},
 			},
 		},
 		"EmptyRolesWithAnyRequirement": {
-			Rules: &guard.Rules{
-				RoleBased: &guard.RoleBased{},
+			Rules: []*guard.Rule{
+				{
+					AuthenticatedAccess: &guard.AuthenticatedAccess{
+						RoleBased: &guard.RoleBased{
+							Roles: []string{},
+							Match: guard.Match(0),
+						},
+					},
+				},
 			},
 		},
 		"MultipleRolesWithAllRequirement": {
-			Rules: &guard.Rules{
-				RoleBased: &guard.RoleBased{
-					AllowedRoles: []string{
-						"admin",
-						"manager",
+			Rules: []*guard.Rule{
+				{
+					AuthenticatedAccess: &guard.AuthenticatedAccess{
+						RoleBased: &guard.RoleBased{
+							Roles: []string{"admin", "manager"},
+							Match: guard.Match(1),
+						},
 					},
-					Requirement: guard.Requirement(1),
 				},
 			},
 		},
 		"MultipleRolesWithAnyRequirement": {
-			Rules: &guard.Rules{
-				RoleBased: &guard.RoleBased{
-					AllowedRoles: []string{
-						"admin",
-						"manager",
+			Rules: []*guard.Rule{
+				{
+					AuthenticatedAccess: &guard.AuthenticatedAccess{
+						RoleBased: &guard.RoleBased{
+							Roles: []string{"admin", "manager"},
+							Match: guard.Match(0),
+						},
 					},
 				},
 			},
@@ -47,6 +64,6 @@ var guardService_RoleBasedAccess = guard.Service{
 	},
 }
 
-func (UnimplementedRoleBasedAccessServer) GetGuardService() *guard.Service {
+func (UnimplementedRoleBasedAccessServer) GuardService() *guard.Service {
 	return &guardService_RoleBasedAccess
 }

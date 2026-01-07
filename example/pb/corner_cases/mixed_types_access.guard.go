@@ -12,34 +12,44 @@ import (
 
 var guardService_MixedTypesAccess = guard.Service{
 	Name: "MixedTypesAccess",
-	Rules: &guard.Rules{
-		RoleBased: &guard.RoleBased{
-			AllowedRoles: []string{
-				"admin",
+	Rules: []*guard.Rule{
+		{
+			AuthenticatedAccess: &guard.AuthenticatedAccess{
+				RoleBased: &guard.RoleBased{
+					Roles: []string{"admin"},
+					Match: guard.Match(0),
+				},
 			},
 		},
 	},
 	Methods: map[string]*guard.Method{
 		"OverrideWithAuthentication": {
-			Rules: &guard.Rules{
-				RequireAuthn: guard.Ptr(true),
+			Rules: []*guard.Rule{
+				{
+					RequireAuthentication: guard.Ptr(true),
+				},
 			},
 		},
 		"OverrideWithPolicies": {
-			Rules: &guard.Rules{
-				PolicyBased: &guard.PolicyBased{
-					PolicyNames: []string{
-						"positive-policy-1",
+			Rules: []*guard.Rule{
+				{
+					AuthenticatedAccess: &guard.AuthenticatedAccess{
+						PolicyBased: &guard.PolicyBased{
+							Policies: []string{"positive-policy-1"},
+							Match:    guard.Match(1),
+						},
 					},
-					Requirement: guard.Requirement(1),
 				},
 			},
 		},
 		"OverrideWithRoles": {
-			Rules: &guard.Rules{
-				RoleBased: &guard.RoleBased{
-					AllowedRoles: []string{
-						"admin",
+			Rules: []*guard.Rule{
+				{
+					AuthenticatedAccess: &guard.AuthenticatedAccess{
+						RoleBased: &guard.RoleBased{
+							Roles: []string{"admin"},
+							Match: guard.Match(1),
+						},
 					},
 				},
 			},
@@ -47,6 +57,6 @@ var guardService_MixedTypesAccess = guard.Service{
 	},
 }
 
-func (UnimplementedMixedTypesAccessServer) GetGuardService() *guard.Service {
+func (UnimplementedMixedTypesAccessServer) GuardService() *guard.Service {
 	return &guardService_MixedTypesAccess
 }

@@ -7,26 +7,38 @@ option go_package = "github.com/casnerano/protoc-gen-go-guard/example/pb/corner_
 import "google/protobuf/empty.proto";
 import "proto/guard.proto";
 
+// Service with default rules.
 service DefaultRules {
+  // Call with default rules.
   rpc GetOne(google.protobuf.Empty) returns (google.protobuf.Empty);
 }
 
+// Service with empty rules.
 service EmptyServiceRules {
+  // Override default rules.
   option (guard.service_rules) = {};
 
+  // Call with inherited rules.
   rpc GetOne(google.protobuf.Empty) returns (google.protobuf.Empty);
 }
 
+// Service with default rules.
 service EmptyMethodRules {
+  // Call with empty rules.
   rpc GetOne(google.protobuf.Empty) returns (google.protobuf.Empty) {
+    // Override default rules.
     option (guard.method_rules) = {};
   };
 }
 
+// Service with empty rules.
 service EmptyServiceAndMethodRules {
+  // Override default rules.
   option (guard.service_rules) = {};
 
+  // Call with empty rules.
   rpc GetOne(google.protobuf.Empty) returns (google.protobuf.Empty) {
+    // Override inherited rules.
     option (guard.method_rules) = {};
   };
 }

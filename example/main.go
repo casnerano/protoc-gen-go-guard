@@ -4,7 +4,6 @@ import (
 	"context"
 	"log"
 	"net"
-	"strings"
 
 	"github.com/casnerano/protoc-gen-go-guard/example/internal/demo"
 	desc "github.com/casnerano/protoc-gen-go-guard/example/pb/demo"
@@ -14,35 +13,30 @@ import (
 	"google.golang.org/grpc/reflection"
 )
 
-func createAuthResolver() interceptor.AuthContextResolver {
-	return func(ctx context.Context) (*interceptor.AuthContext, error) {
+func createSubjectResolver() interceptor.SubjectResolver {
+	return func(ctx context.Context) (*interceptor.Subject, error) {
 		md, ok := metadata.FromIncomingContext(ctx)
 		if !ok {
-			return &interceptor.AuthContext{}, nil
+			return nil, nil
 		}
 
-		authContext := interceptor.AuthContext{}
-
-		if authorization, exists := md["authorization"]; exists && len(authorization) > 0 {
-			authContext.Authenticated = true
+		subject := interceptor.Subject{}
+		if roles, exists := md["roles"]; exists {
+			subject.Roles = roles
 		}
 
-		if roles, exists := md["roles"]; exists && len(roles) > 0 {
-			authContext.Roles = strings.Split(roles[0], ",")
-		}
-
-		return &authContext, nil
+		return &subject, nil
 	}
 }
 
 func buildPolicies() interceptor.Policies {
 	return interceptor.Policies{
-		"demo-period": func(ctx context.Context, authContext *interceptor.AuthContext, request interface{}) (bool, error) {
-			// check demo period with auth context and request
+		"demo-period": func(ctx context.Context, input *interceptor.Input) (bool, error) {
+			// check demo period with input
 			return true, nil
 		},
-		"premium": func(ctx context.Context, authContext *interceptor.AuthContext, request interface{}) (bool, error) {
-			// check premium with auth context and request
+		"premium": func(ctx context.Context, input *interceptor.Input) (bool, error) {
+			// check premium with input
 			return false, nil
 		},
 	}
@@ -54,13 +48,15 @@ func main() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
+	guardInterceptor := interceptor.New(
+		createSubjectResolver(),
+		interceptor.WithPolicies(buildPolicies()),
+		interceptor.WithDebug(),
+	)
+
 	server := grpc.NewServer(
-		grpc.UnaryInterceptor(
-			interceptor.GuardUnary(
-				createAuthResolver(),
-				interceptor.WithPolicies(buildPolicies()),
-				interceptor.WithDebug(),
-			),
+		grpc.ChainUnaryInterceptor(
+			guardInterceptor.Unary(),
 		),
 	)
 

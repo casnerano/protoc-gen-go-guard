@@ -9,29 +9,37 @@ import "proto/guard.proto";
 
 service User {
   // Service requires authentication by default
-  option (guard.service_rules).require_authentication = true;
+  option (guard.service_rules) = { require_authentication: true };
 
-  // Overrides service rules - makes method public
+  // Overrides service rules — makes method public
   rpc GetPublicProfile(google.protobuf.Empty) returns (google.protobuf.Empty) {
-    option (guard.method_rules).allow_public = true;
+    option (guard.method_rules) = { allow_public: true };
   }
 
   // Inherits service rules (requires authentication)
   rpc GetPrivateProfile(google.protobuf.Empty) returns (google.protobuf.Empty);
 
-  // Overrides service rules - requires ANY matching policy
+  // Overrides service rules — requires passed at least one policy.
   rpc UpdateProfileStatus(google.protobuf.Empty) returns (google.protobuf.Empty) {
-    option (guard.method_rules).policy_based = {
-      policy_names: ["demo-period", "premium"],
-      requirement: ANY
+    option (guard.method_rules) = {
+      authenticated_access: {
+        policy_based: {
+          policies: ["demo-period", "premium"],
+          match: AT_LEAST_ONE
+        }
+      }
     };
   }
 
-  // Overrides service rules - requires ALL specified roles
+  // Overrides service rules — requires all specified roles.
   rpc DeleteProfile(google.protobuf.Empty) returns (google.protobuf.Empty) {
-    option (guard.method_rules).role_based = {
-      allowed_roles: ["user", "verified"],
-      requirement: ALL
+    option (guard.method_rules) = {
+      authenticated_access: {
+        role_based: {
+          roles: ["user", "verified"],
+          match: ALL
+        }
+      }
     };
   }
 }

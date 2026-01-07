@@ -12,32 +12,39 @@ import (
 
 var guardService_User = guard.Service{
 	Name: "User",
-	Rules: &guard.Rules{
-		RequireAuthn: guard.Ptr(true),
+	Rules: []*guard.Rule{
+		{
+			RequireAuthentication: guard.Ptr(true),
+		},
 	},
 	Methods: map[string]*guard.Method{
 		"DeleteProfile": {
-			Rules: &guard.Rules{
-				RoleBased: &guard.RoleBased{
-					AllowedRoles: []string{
-						"user",
-						"verified",
+			Rules: []*guard.Rule{
+				{
+					AuthenticatedAccess: &guard.AuthenticatedAccess{
+						RoleBased: &guard.RoleBased{
+							Roles: []string{"user", "verified"},
+							Match: guard.Match(1),
+						},
 					},
-					Requirement: guard.Requirement(1),
 				},
 			},
 		},
 		"GetPublicProfile": {
-			Rules: &guard.Rules{
-				AllowPublic: guard.Ptr(true),
+			Rules: []*guard.Rule{
+				{
+					AllowPublic: guard.Ptr(true),
+				},
 			},
 		},
 		"UpdateProfileStatus": {
-			Rules: &guard.Rules{
-				PolicyBased: &guard.PolicyBased{
-					PolicyNames: []string{
-						"demo-period",
-						"premium",
+			Rules: []*guard.Rule{
+				{
+					AuthenticatedAccess: &guard.AuthenticatedAccess{
+						PolicyBased: &guard.PolicyBased{
+							Policies: []string{"demo-period", "premium"},
+							Match:    guard.Match(0),
+						},
 					},
 				},
 			},
@@ -45,6 +52,6 @@ var guardService_User = guard.Service{
 	},
 }
 
-func (UnimplementedUserServer) GetGuardService() *guard.Service {
+func (UnimplementedUserServer) GuardService() *guard.Service {
 	return &guardService_User
 }

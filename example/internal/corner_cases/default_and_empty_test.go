@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	desc "github.com/casnerano/protoc-gen-go-guard/example/pb/corner_cases"
+	"github.com/casnerano/protoc-gen-go-guard/pkg/interceptor"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -13,6 +14,7 @@ import (
 
 type DefaultRulesServerTestSuite struct {
 	CornerCasesServerTestSuite
+
 	client desc.DefaultRulesClient
 }
 
@@ -34,13 +36,13 @@ func (s *DefaultRulesServerTestSuite) TestGetOne() {
 		canAccess bool
 	}{
 		{
-			name:      "access denied without token",
+			name:      "access denied for unauthenticated",
 			context:   context.Background(),
 			canAccess: false,
 		},
 		{
-			name:      "access denied with token and roles",
-			context:   testContextWithMetadata("test-token", "admin", "manager"),
+			name:      "access denied for authenticated",
+			context:   testContextWithSubject(interceptor.Subject{}),
 			canAccess: false,
 		},
 	}
@@ -51,7 +53,7 @@ func (s *DefaultRulesServerTestSuite) TestGetOne() {
 			if tt.canAccess {
 				s.NoError(err)
 			} else {
-				s.Equal(codes.PermissionDenied, status.Code(err))
+				s.Equal(codes.PermissionDenied.String(), status.Code(err).String())
 			}
 		})
 	}
@@ -59,6 +61,7 @@ func (s *DefaultRulesServerTestSuite) TestGetOne() {
 
 type EmptyServiceRulesServerTestSuite struct {
 	CornerCasesServerTestSuite
+
 	client desc.EmptyServiceRulesClient
 }
 
@@ -80,13 +83,13 @@ func (s *EmptyServiceRulesServerTestSuite) TestGetOne() {
 		canAccess bool
 	}{
 		{
-			name:      "access denied without token",
+			name:      "access denied for unauthenticated",
 			context:   context.Background(),
 			canAccess: false,
 		},
 		{
-			name:      "access denied with token and roles",
-			context:   testContextWithMetadata("test-token", "admin", "manager"),
+			name:      "access denied for authenticated",
+			context:   testContextWithSubject(interceptor.Subject{}),
 			canAccess: false,
 		},
 	}
@@ -97,7 +100,7 @@ func (s *EmptyServiceRulesServerTestSuite) TestGetOne() {
 			if tt.canAccess {
 				s.NoError(err)
 			} else {
-				s.Equal(codes.PermissionDenied, status.Code(err))
+				s.Equal(codes.PermissionDenied.String(), status.Code(err).String())
 			}
 		})
 	}
@@ -105,6 +108,7 @@ func (s *EmptyServiceRulesServerTestSuite) TestGetOne() {
 
 type EmptyMethodRulesServerTestSuite struct {
 	CornerCasesServerTestSuite
+
 	client desc.EmptyMethodRulesClient
 }
 
@@ -126,13 +130,13 @@ func (s *EmptyMethodRulesServerTestSuite) TestGetOne() {
 		canAccess bool
 	}{
 		{
-			name:      "access denied without token",
+			name:      "access denied for unauthenticated",
 			context:   context.Background(),
 			canAccess: false,
 		},
 		{
-			name:      "access denied with token and roles",
-			context:   testContextWithMetadata("test-token", "admin", "manager"),
+			name:      "access denied for authenticated",
+			context:   testContextWithSubject(interceptor.Subject{}),
 			canAccess: false,
 		},
 	}
@@ -143,7 +147,7 @@ func (s *EmptyMethodRulesServerTestSuite) TestGetOne() {
 			if tt.canAccess {
 				s.NoError(err)
 			} else {
-				s.Equal(codes.PermissionDenied, status.Code(err))
+				s.Equal(codes.PermissionDenied.String(), status.Code(err).String())
 			}
 		})
 	}
@@ -151,6 +155,7 @@ func (s *EmptyMethodRulesServerTestSuite) TestGetOne() {
 
 type EmptyServiceAndMethodRulesServerTestSuite struct {
 	CornerCasesServerTestSuite
+
 	client desc.EmptyServiceAndMethodRulesClient
 }
 
@@ -172,13 +177,13 @@ func (s *EmptyServiceAndMethodRulesServerTestSuite) TestGetOne() {
 		canAccess bool
 	}{
 		{
-			name:      "access denied without token",
+			name:      "access denied for unauthenticated",
 			context:   context.Background(),
 			canAccess: false,
 		},
 		{
-			name:      "access denied with token and roles",
-			context:   testContextWithMetadata("test-token", "admin", "manager"),
+			name:      "access denied for authenticated",
+			context:   testContextWithSubject(interceptor.Subject{}),
 			canAccess: false,
 		},
 	}
@@ -189,7 +194,7 @@ func (s *EmptyServiceAndMethodRulesServerTestSuite) TestGetOne() {
 			if tt.canAccess {
 				s.NoError(err)
 			} else {
-				s.Equal(codes.PermissionDenied, status.Code(err))
+				s.Equal(codes.PermissionDenied.String(), status.Code(err).String())
 			}
 		})
 	}

@@ -23,6 +23,7 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type DefaultRulesClient interface {
+	// Call with default rules.
 	GetOne(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
@@ -47,6 +48,7 @@ func (c *defaultRulesClient) GetOne(ctx context.Context, in *emptypb.Empty, opts
 // All implementations must embed UnimplementedDefaultRulesServer
 // for forward compatibility
 type DefaultRulesServer interface {
+	// Call with default rules.
 	GetOne(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
 	mustEmbedUnimplementedDefaultRulesServer()
 }
@@ -109,6 +111,7 @@ var DefaultRules_ServiceDesc = grpc.ServiceDesc{
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type EmptyServiceRulesClient interface {
+	// Call with inherited rules.
 	GetOne(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
@@ -133,6 +136,7 @@ func (c *emptyServiceRulesClient) GetOne(ctx context.Context, in *emptypb.Empty,
 // All implementations must embed UnimplementedEmptyServiceRulesServer
 // for forward compatibility
 type EmptyServiceRulesServer interface {
+	// Call with inherited rules.
 	GetOne(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
 	mustEmbedUnimplementedEmptyServiceRulesServer()
 }
@@ -195,6 +199,7 @@ var EmptyServiceRules_ServiceDesc = grpc.ServiceDesc{
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type EmptyMethodRulesClient interface {
+	// Call with empty rules.
 	GetOne(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
@@ -219,6 +224,7 @@ func (c *emptyMethodRulesClient) GetOne(ctx context.Context, in *emptypb.Empty, 
 // All implementations must embed UnimplementedEmptyMethodRulesServer
 // for forward compatibility
 type EmptyMethodRulesServer interface {
+	// Call with empty rules.
 	GetOne(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
 	mustEmbedUnimplementedEmptyMethodRulesServer()
 }
@@ -281,6 +287,7 @@ var EmptyMethodRules_ServiceDesc = grpc.ServiceDesc{
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type EmptyServiceAndMethodRulesClient interface {
+	// Call with empty rules.
 	GetOne(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
@@ -305,6 +312,7 @@ func (c *emptyServiceAndMethodRulesClient) GetOne(ctx context.Context, in *empty
 // All implementations must embed UnimplementedEmptyServiceAndMethodRulesServer
 // for forward compatibility
 type EmptyServiceAndMethodRulesServer interface {
+	// Call with empty rules.
 	GetOne(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
 	mustEmbedUnimplementedEmptyServiceAndMethodRulesServer()
 }
