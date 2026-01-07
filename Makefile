@@ -1,5 +1,5 @@
-LOCAL_BIN := $(CURDIR)/bin
-EXAMPLE_DIR := $(CURDIR)/example
+LOCAL_BIN := ./bin
+EXAMPLE_DIR := ./example
 
 .PHONY: download-bin-deps
 download-bin-deps:
@@ -26,11 +26,8 @@ generate: download-bin-deps generate-guard-proto build-protoc-gen-go-guard gener
 .PHONY: clean
 clean:
 	rm -rf $(LOCAL_BIN)
-	rm -rf $(CURDIR)/proto/*.pb.go
-	rm -rf $(CURDIR)/example/pb/*.pb.go
+	rm -rf ./proto/*.pb.go
+	rm -rf ./example/pb/*.pb.go
 
-example-run:
-	go run ${EXAMPLE_DIR}/main.go
-
-example-test:
-	go test ${EXAMPLE_DIR}/...
+test:
+	go test -count=1 -tags=integration ./...
