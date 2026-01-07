@@ -1,8 +1,9 @@
-LOCAL_BIN := ./bin
-EXAMPLE_DIR := ./example
+LOCAL_BIN := ${CURDIR}/bin
+EXAMPLE_DIR := ${CURDIR}/example
 
 .PHONY: download-bin-deps
 download-bin-deps:
+	ls $(LOCAL_BIN)/golangci-lint &> /dev/null || GOBIN=$(LOCAL_BIN) go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.7.2
 	ls $(LOCAL_BIN)/buf &> /dev/null || GOBIN=$(LOCAL_BIN) go install github.com/bufbuild/buf/cmd/buf@latest
 	ls $(LOCAL_BIN)/protoc-gen-go &> /dev/null || GOBIN=$(LOCAL_BIN) go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28.1
 	ls $(LOCAL_BIN)/protoc-gen-go-grpc &> /dev/null || GOBIN=$(LOCAL_BIN) go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2.0
@@ -31,3 +32,6 @@ clean:
 
 test:
 	go test -count=1 -tags=integration ./...
+
+lint:
+	$(LOCAL_BIN)/golangci-lint run ./...
