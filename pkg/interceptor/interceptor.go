@@ -63,7 +63,7 @@ type (
 	}
 )
 
-type interceptor struct {
+type Interceptor struct {
 	debug           bool
 	policies        Policies
 	defaultRules    guard.Rules
@@ -73,8 +73,8 @@ type interceptor struct {
 
 // New creates a new guard interceptor.
 // It requires a SubjectResolver and accepts optional configuration via Options.
-func New(resolver SubjectResolver, opts ...Option) *interceptor {
-	i := interceptor{
+func New(resolver SubjectResolver, opts ...Option) *Interceptor {
+	i := Interceptor{
 		subjectResolver: resolver,
 	}
 
@@ -87,7 +87,7 @@ func New(resolver SubjectResolver, opts ...Option) *interceptor {
 
 // authorize evaluates whether the current request is allowed based on the resolved subject
 // and the applicable access rules. Returns nil on success, or a gRPC error on denial/failure.
-func (i *interceptor) authorize(ctx context.Context, server any, fullMethod string, req any) error {
+func (i *Interceptor) authorize(ctx context.Context, server any, fullMethod string, req any) error {
 	input := Input{
 		Request: req,
 	}
@@ -143,7 +143,7 @@ func (i *interceptor) authorize(ctx context.Context, server any, fullMethod stri
 
 // Unary returns a grpc.UnaryServerInterceptor that enforces guard rules
 // on unary (request-response) gRPC methods.
-func (i *interceptor) Unary() grpc.UnaryServerInterceptor {
+func (i *Interceptor) Unary() grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp any, err error) {
 		if err = i.authorize(ctx, info.Server, info.FullMethod, req); err != nil {
 			return nil, err
@@ -154,7 +154,7 @@ func (i *interceptor) Unary() grpc.UnaryServerInterceptor {
 
 // Stream returns a grpc.StreamServerInterceptor that enforces guard rules
 // on streaming gRPC methods.
-func (i *interceptor) Stream() grpc.StreamServerInterceptor {
+func (i *Interceptor) Stream() grpc.StreamServerInterceptor {
 	return func(srv any, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
 		if err := i.authorize(ss.Context(), srv, info.FullMethod, nil); err != nil {
 			return err

@@ -9,7 +9,7 @@ import (
 
 // evaluateRules checks a list of rules in order. Access is granted if any rule allows it.
 // Returns true if access is granted, false if all rules deny access.
-func (i *interceptor) evaluateRules(ctx context.Context, rules guard.Rules, input *Input) (bool, error) {
+func (i *Interceptor) evaluateRules(ctx context.Context, rules guard.Rules, input *Input) (bool, error) {
 	for _, rule := range rules {
 		allowed, err := i.evaluateRule(ctx, rule, input)
 		if err != nil {
@@ -25,7 +25,7 @@ func (i *interceptor) evaluateRules(ctx context.Context, rules guard.Rules, inpu
 }
 
 // evaluateRule checks a single rule. Returns true if the rule allows access.
-func (i *interceptor) evaluateRule(ctx context.Context, rule *guard.Rule, input *Input) (bool, error) {
+func (i *Interceptor) evaluateRule(ctx context.Context, rule *guard.Rule, input *Input) (bool, error) {
 	if rule.AllowPublic != nil && *rule.AllowPublic {
 		return true, nil
 	}
@@ -73,7 +73,7 @@ func (i *interceptor) evaluateRule(ctx context.Context, rule *guard.Rule, input 
 
 // evaluateRoleBasedAccess checks if the subject satisfies the role-based conditions.
 // Returns true if access should be granted based on roles.
-func (i *interceptor) evaluateRoleBasedAccess(_ context.Context, roleBased *guard.RoleBased, input *Input) (bool, error) {
+func (i *Interceptor) evaluateRoleBasedAccess(_ context.Context, roleBased *guard.RoleBased, input *Input) (bool, error) {
 	if len(roleBased.Roles) == 0 {
 		return false, nil
 	}
@@ -103,7 +103,7 @@ func (i *interceptor) evaluateRoleBasedAccess(_ context.Context, roleBased *guar
 //   - RequireAuthentication: grants access if subject is authenticated.
 //   - AuthenticatedAccess: requires authentication and optionally checks roles and/or policies.
 //     If both roles and policies are specified, both must allow access.
-func (i *interceptor) evaluatePolicyBasedAccess(ctx context.Context, policyBased *guard.PolicyBased, input *Input) (bool, error) {
+func (i *Interceptor) evaluatePolicyBasedAccess(ctx context.Context, policyBased *guard.PolicyBased, input *Input) (bool, error) {
 	if len(policyBased.Policies) == 0 {
 		return false, nil
 	}
