@@ -42,7 +42,7 @@ var guardService_PolicyBasedAccess = guard.Service{
 				{
 					AuthenticatedAccess: &guard.AuthenticatedAccess{
 						PolicyBased: &guard.PolicyBased{
-							Policies: []string{"policy1", "policy2"},
+							Policies: []string{"positive-policy-1", "negative-policy-1"},
 							Match:    guard.Match(1),
 						},
 					},
@@ -54,7 +54,7 @@ var guardService_PolicyBasedAccess = guard.Service{
 				{
 					AuthenticatedAccess: &guard.AuthenticatedAccess{
 						PolicyBased: &guard.PolicyBased{
-							Policies: []string{"policy1", "policy2"},
+							Policies: []string{"positive-policy-1", "negative-policy-1"},
 							Match:    guard.Match(0),
 						},
 					},
