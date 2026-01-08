@@ -1,12 +1,12 @@
-name: Continuous Integration
+name: main
 
 on:
   pull_request:
     branches: [ master ]
 
 jobs:
-  lints:
-    name: Lints
+  lint:
+    name: lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -21,8 +21,8 @@ jobs:
         with:
           version: latest
 
-  tests:
-    name: Tests
+  test:
+    name: test
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -33,7 +33,7 @@ jobs:
         go-version: 1.25
 
     - name: Run unit tests
-      run: go test -v -race ./... -coverprofile=coverage.out
+      run: make cover-profile
 
     - name: Run integration tests
       run: go test -v -tags=integration ./...
