@@ -1,6 +1,6 @@
 version: v2
 plugins:
-  - local: bin/protoc-gen-go
+  - local: ./bin/protoc-gen-go
     out: .
     strategy: directory
     opt:
