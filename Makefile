@@ -1,6 +1,6 @@
 LOCAL_BIN := ${CURDIR}/bin
 EXAMPLE_DIR := ${CURDIR}/example
-GO_COVER_EXCLUDE := "example|.*\.pb\.go"
+GO_COVER_EXCLUDE := "example|e2e|.*\.pb\.go"
 
 .PHONY: download-bin-deps
 download-bin-deps:
@@ -11,29 +11,41 @@ download-bin-deps:
 
 .PHONY: generate-guard-proto
 generate-guard-proto:
-	$(LOCAL_BIN)/buf generate --config ${CURDIR}/buf.yaml --template ${CURDIR}/buf.gen.yaml
+	$(LOCAL_BIN)/buf generate --config ${CURDIR}/buf.yaml --template ${CURDIR}/buf.go.gen.yaml --path ./proto
+
+.PHONY: generate-e2e-proto
+generate-e2e-proto:
+	$(LOCAL_BIN)/buf generate --config ${CURDIR}/buf.yaml --template ${CURDIR}/buf.grpc.gen.yaml --path ./e2e
 
 .PHONY: generate-example-proto
 generate-example-proto:
-	$(LOCAL_BIN)/buf generate --config ${EXAMPLE_DIR}/buf.yaml --template ${EXAMPLE_DIR}/buf.gen.yaml
+	$(LOCAL_BIN)/buf generate --config ${CURDIR}/buf.yaml --template ${CURDIR}/buf.grpc.gen.yaml --path ./example
 
 .PHONY: build-protoc-gen-go-guard
 build-protoc-gen-go-guard:
 	go build -o ${LOCAL_BIN}/protoc-gen-go-guard ./cmd/protoc-gen-go-guard
 
 .PHONY: generate
-generate: download-bin-deps generate-guard-proto build-protoc-gen-go-guard generate-example-proto
+generate: download-bin-deps generate-guard-proto build-protoc-gen-go-guard generate-e2e-proto generate-example-proto
 	go mod tidy
 
 .PHONY: clean
 clean:
 	rm -rf $(LOCAL_BIN)
 	rm -rf ./proto/*.pb.go
+	rm -rf ./e2e/grpc/pb/*.pb.go
 	rm -rf ./example/pb/*.pb.go
 
 .PHONY: test
 test:
-	go test -race -count=1 -tags=integration ./...
+	go test -race -count=1 -tags=e2e ./...
+
+.PHONY: test
+test:
+	go test -race -count=1 -tags=e2e ./...
+
+bench:
+	go test -bench=. -benchtime=3s -benchmem -count=3 -tags=e2e ./e2e/grpc/...
 
 cover-profile:
 	go test -race -count=1 -cover -coverprofile=coverage.temp.out -covermode=atomic ./...

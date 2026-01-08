@@ -1,0 +1,54 @@
+syntax = "proto3";
+
+package e2e.corner_cases;
+
+option go_package = "github.com/casnerano/protoc-gen-go-guard/e2e/grpc/pb/corner_cases";
+
+import "google/protobuf/empty.proto";
+import "proto/guard.proto";
+
+service PolicyBasedAccess {
+  rpc EmptyPoliciesWithAnyRequirement(google.protobuf.Empty) returns (google.protobuf.Empty) {
+    option (guard.method_rules) = {
+      authenticated_access: {
+        policy_based: {
+          policies: [],
+          match: AT_LEAST_ONE
+        }
+      }
+    };
+  };
+
+  rpc EmptyPoliciesWithAllRequirement(google.protobuf.Empty) returns (google.protobuf.Empty) {
+    option (guard.method_rules) = {
+      authenticated_access: {
+        policy_based: {
+          policies: [],
+          match: ALL
+        }
+      }
+    };
+  };
+
+  rpc MultiplePoliciesWithAnyRequirement(google.protobuf.Empty) returns (google.protobuf.Empty) {
+    option (guard.method_rules) = {
+      authenticated_access: {
+        policy_based: {
+          policies: ["positive-policy-1", "negative-policy-1"],
+          match: AT_LEAST_ONE
+        }
+      }
+    };
+  };
+
+  rpc MultiplePoliciesWithAllRequirement(google.protobuf.Empty) returns (google.protobuf.Empty) {
+    option (guard.method_rules) = {
+      authenticated_access: {
+        policy_based: {
+          policies: ["positive-policy-1", "negative-policy-1"],
+          match: ALL
+        }
+      }
+    };
+  };
+}
