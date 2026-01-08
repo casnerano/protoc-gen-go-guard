@@ -45,7 +45,7 @@ test-cover: cover-profile
 
 .PHONY: test-cover-html
 test-cover-html: cover-profile
-	go tool cover -html=cover.out
+	go tool cover -html=coverage.out
 
 .PHONY: lint
 lint:
