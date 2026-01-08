@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package e2e.benchmarks;
+
+option go_package = "github.com/casnerano/protoc-gen-go-guard/e2e/grpc/pb/benchmarks";
+
+import "google/protobuf/empty.proto";
+import "proto/guard.proto";
+
+service DefaultRules {
+  rpc PublicAccessMethod(google.protobuf.Empty) returns (google.protobuf.Empty) {
+    option (guard.method_rules) = { allow_public: true };
+  }
+
+  rpc AuthenticatedAccessMethod(google.protobuf.Empty) returns (google.protobuf.Empty) {
+    option (guard.method_rules) = { require_authentication: true };
+  }
+
+  rpc RoleBasedAccessMethod(google.protobuf.Empty) returns (google.protobuf.Empty) {
+    option (guard.method_rules) = {
+      authenticated_access: {
+        role_based: {
+          roles: ["admin"],
+          match: AT_LEAST_ONE
+        }
+      }
+    };
+  }
+}

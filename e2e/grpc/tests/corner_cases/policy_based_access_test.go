@@ -1,13 +1,13 @@
 //go:build e2e
 
-package tests
+package corner_cases
 
 import (
 	"context"
 	"testing"
 
 	desc "github.com/casnerano/protoc-gen-go-guard/e2e/grpc/pb/corner_cases"
-	"github.com/casnerano/protoc-gen-go-guard/e2e/grpc/services"
+	services "github.com/casnerano/protoc-gen-go-guard/e2e/grpc/services/corner_cases"
 	"github.com/casnerano/protoc-gen-go-guard/pkg/interceptor"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/grpc/codes"

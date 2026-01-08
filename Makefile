@@ -11,7 +11,11 @@ download-bin-deps:
 
 .PHONY: generate-guard-proto
 generate-guard-proto:
-	$(LOCAL_BIN)/buf generate --config ${CURDIR}/buf.yaml --template ${CURDIR}/buf.gen.yaml
+	$(LOCAL_BIN)/buf generate --config ${CURDIR}/buf.yaml --template ${CURDIR}/buf.gen.yaml --path ./proto
+
+.PHONY: generate-guard-proto
+generate-e2e-proto:
+	$(LOCAL_BIN)/buf generate --config ${CURDIR}/buf.yaml --template ${CURDIR}/buf.gen.yaml --path ./e2e
 
 .PHONY: generate-example-proto
 generate-example-proto:

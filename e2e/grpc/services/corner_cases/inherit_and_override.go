@@ -1,14 +1,14 @@
-package services
+package corner_cases
 
 import (
 	"context"
 
-	"github.com/casnerano/protoc-gen-go-guard/e2e/grpc/pb/corner_cases"
+	desc "github.com/casnerano/protoc-gen-go-guard/e2e/grpc/pb/corner_cases"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 type InheritAndOverrideOneServer struct {
-	corner_cases.UnimplementedInheritAndOverrideOneServer
+	desc.UnimplementedInheritAndOverrideOneServer
 }
 
 func (i InheritAndOverrideOneServer) InheritedMethod(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
@@ -20,7 +20,7 @@ func (i InheritAndOverrideOneServer) OverriddenMethod(context.Context, *emptypb.
 }
 
 type InheritAndOverrideTwoServer struct {
-	corner_cases.UnimplementedInheritAndOverrideTwoServer
+	desc.UnimplementedInheritAndOverrideTwoServer
 }
 
 func (i InheritAndOverrideTwoServer) InheritedMethod(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {

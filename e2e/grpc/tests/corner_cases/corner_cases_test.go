@@ -1,6 +1,6 @@
 //go:build e2e
 
-package tests
+package corner_cases
 
 import (
 	"context"

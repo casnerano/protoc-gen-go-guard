@@ -1,14 +1,14 @@
-package services
+package corner_cases
 
 import (
 	"context"
 
-	"github.com/casnerano/protoc-gen-go-guard/e2e/grpc/pb/corner_cases"
+	desc "github.com/casnerano/protoc-gen-go-guard/e2e/grpc/pb/corner_cases"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 type MixedTypesAccessServer struct {
-	corner_cases.UnimplementedMixedTypesAccessServer
+	desc.UnimplementedMixedTypesAccessServer
 }
 
 func (m *MixedTypesAccessServer) OverrideWithPolicies(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
