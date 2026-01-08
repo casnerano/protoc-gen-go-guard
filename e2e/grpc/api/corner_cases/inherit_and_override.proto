@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package e2e.corner_cases;
+
+option go_package = "github.com/casnerano/protoc-gen-go-guard/e2e/grpc/pb/corner_cases";
+
+import "google/protobuf/empty.proto";
+import "proto/guard.proto";
+
+// Service with default rules.
+service InheritAndOverrideOne {
+  // Call default rules.
+  rpc InheritedMethod(google.protobuf.Empty) returns (google.protobuf.Empty);
+
+  // Call override default rules.
+  rpc OverriddenMethod(google.protobuf.Empty) returns (google.protobuf.Empty) {
+    // Override default rules: allow public access.
+    option (guard.method_rules) = { allow_public: true };
+  };
+}
+
+// Service with public access rules.
+service InheritAndOverrideTwo {
+  // Override default rules: allow public access.
+  option (guard.service_rules) = { allow_public: true };
+
+  // Call with inherited rules.
+  rpc InheritedMethod(google.protobuf.Empty) returns (google.protobuf.Empty);
+
+  // Call with override rules.
+  rpc OverriddenMethod(google.protobuf.Empty) returns (google.protobuf.Empty) {
+    // Override inherited rules: denied public access.
+    option (guard.method_rules) = { allow_public: false };
+  };
+}

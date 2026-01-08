@@ -1,6 +1,6 @@
 LOCAL_BIN := ${CURDIR}/bin
 EXAMPLE_DIR := ${CURDIR}/example
-GO_COVER_EXCLUDE := "example|.*\.pb\.go"
+GO_COVER_EXCLUDE := "example|e2e|.*\.pb\.go"
 
 .PHONY: download-bin-deps
 download-bin-deps:
@@ -29,11 +29,12 @@ generate: download-bin-deps generate-guard-proto build-protoc-gen-go-guard gener
 clean:
 	rm -rf $(LOCAL_BIN)
 	rm -rf ./proto/*.pb.go
+	rm -rf ./e2e/grpc/pb/*.pb.go
 	rm -rf ./example/pb/*.pb.go
 
 .PHONY: test
 test:
-	go test -race -count=1 -tags=integration ./...
+	go test -race -count=1 -tags=e2e ./...
 
 cover-profile:
 	go test -race -count=1 -cover -coverprofile=coverage.temp.out -covermode=atomic ./...
