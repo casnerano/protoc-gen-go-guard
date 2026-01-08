@@ -301,46 +301,58 @@ func Test_interceptor_evaluateRule(t *testing.T) {
 
 func Test_interceptor_evaluateRoleBasedAccess(t *testing.T) {
 	tests := []struct {
-		name         string
-		roles        []string
-		subjectRoles []string
-		match        guard.Match
-		wantAllowed  bool
-		errAssertion bool
+		name          string
+		requiredRoles []string
+		subjectRoles  []string
+		match         guard.Match
+
+		allowAssertion assert.BoolAssertionFunc
+		errAssertion   assert.ErrorAssertionFunc
 	}{
 		{
-			name:        "no roles",
-			roles:       []string{},
-			wantAllowed: false,
+			name:           "nil required roles",
+			requiredRoles:  nil,
+			allowAssertion: assert.False,
 		},
 		{
-			name:         "match all: success",
-			roles:        []string{"admin", "manager"},
-			subjectRoles: []string{"admin", "manager"},
-			match:        guard.MatchAll,
-			wantAllowed:  true,
+			name:           "empty required roles",
+			requiredRoles:  []string{},
+			allowAssertion: assert.False,
 		},
 		{
-			name:         "match all: fail",
-			roles:        []string{"admin", "manager"},
-			subjectRoles: []string{"admin"},
-			match:        guard.MatchAll,
-			wantAllowed:  false,
+			name:           "match all required roles",
+			requiredRoles:  []string{"admin", "manager"},
+			subjectRoles:   []string{"admin", "manager"},
+			match:          guard.MatchAll,
+			allowAssertion: assert.True,
 		},
 		{
-			name:         "match at least one: success",
-			roles:        []string{"admin", "manager"},
-			subjectRoles: []string{"user", "manager"},
-			match:        guard.MatchAtLeastOne,
-			wantAllowed:  true,
+			name:           "no match all required roles",
+			requiredRoles:  []string{"admin", "manager"},
+			subjectRoles:   []string{"admin"},
+			match:          guard.MatchAll,
+			allowAssertion: assert.False,
 		},
 		{
-			name:         "unknown match type",
-			roles:        []string{"admin"},
-			subjectRoles: []string{"admin"},
-			match:        guard.Match(-1),
-			wantAllowed:  false,
-			errAssertion: true,
+			name:           "match at least one required roles",
+			requiredRoles:  []string{"admin", "manager"},
+			subjectRoles:   []string{"user", "manager"},
+			match:          guard.MatchAtLeastOne,
+			allowAssertion: assert.True,
+		},
+		{
+			name:           "no match at least one required roles",
+			requiredRoles:  []string{"admin", "manager"},
+			subjectRoles:   []string{},
+			match:          guard.MatchAtLeastOne,
+			allowAssertion: assert.False,
+		},
+		{
+			name:          "unknown match type",
+			requiredRoles: []string{"admin"},
+			subjectRoles:  []string{"admin"},
+			match:         guard.Match(-1),
+			errAssertion:  assert.Error,
 		},
 	}
 
@@ -349,7 +361,7 @@ func Test_interceptor_evaluateRoleBasedAccess(t *testing.T) {
 			i := &Interceptor{}
 
 			roleBased := &guard.RoleBased{
-				Roles: tt.roles,
+				Roles: tt.requiredRoles,
 				Match: tt.match,
 			}
 
@@ -360,122 +372,131 @@ func Test_interceptor_evaluateRoleBasedAccess(t *testing.T) {
 			}
 
 			allowed, err := i.evaluateRoleBasedAccess(context.Background(), roleBased, input)
-			if tt.errAssertion {
-				assert.Error(t, err)
+			if tt.errAssertion != nil {
+				tt.errAssertion(t, err)
 				return
 			}
 
 			require.NoError(t, err)
-			assert.Equal(t, tt.wantAllowed, allowed)
+			tt.allowAssertion(t, allowed)
 		})
 	}
 }
 
 func Test_interceptor_evaluatePolicyBasedAccess(t *testing.T) {
 	tests := []struct {
-		name         string
-		policies     []string
-		policyMap    Policies
-		match        guard.Match
-		wantAllowed  bool
-		errAssertion bool
+		name             string
+		requiredPolicies []string
+		declaredPolicies Policies
+		match            guard.Match
+
+		allowAssertion assert.BoolAssertionFunc
+		errAssertion   assert.ErrorAssertionFunc
 	}{
 		{
-			name:        "no policies",
-			policies:    []string{},
-			wantAllowed: false,
+			name:             "no required policies",
+			requiredPolicies: []string{},
+			allowAssertion:   assert.False,
 		},
 		{
-			name:     "match all: success",
-			policies: []string{"positive-1", "positive-2"},
-			policyMap: Policies{
-				"positive-1": func(ctx context.Context, input *Input) (bool, error) { return true, nil },
-				"positive-2": func(ctx context.Context, input *Input) (bool, error) { return true, nil },
+			name:             "match all required policies",
+			requiredPolicies: []string{"positive-policy-1", "positive-policy-2"},
+			declaredPolicies: Policies{
+				"positive-policy-1": func(ctx context.Context, input *Input) (bool, error) { return true, nil },
+				"positive-policy-2": func(ctx context.Context, input *Input) (bool, error) { return true, nil },
 			},
-			match:       guard.MatchAll,
-			wantAllowed: true,
+			match:          guard.MatchAll,
+			allowAssertion: assert.True,
 		},
 		{
-			name:     "match all: fail",
-			policies: []string{"positive-1", "negative-1"},
-			policyMap: Policies{
-				"positive-1": func(ctx context.Context, input *Input) (bool, error) { return true, nil },
-				"negative-1": func(ctx context.Context, input *Input) (bool, error) { return false, nil },
+			name:             "no match all required policies",
+			requiredPolicies: []string{"positive-policy-1", "negative-policy-1"},
+			declaredPolicies: Policies{
+				"positive-policy-1": func(ctx context.Context, input *Input) (bool, error) { return true, nil },
+				"negative-policy-1": func(ctx context.Context, input *Input) (bool, error) { return false, nil },
 			},
-			match:       guard.MatchAll,
-			wantAllowed: false,
+			match:          guard.MatchAll,
+			allowAssertion: assert.False,
 		},
 		{
-			name:     "match at least one: success",
-			policies: []string{"negative-1", "positive-1"},
-			policyMap: Policies{
-				"negative-1": func(ctx context.Context, input *Input) (bool, error) { return false, nil },
-				"positive-1": func(ctx context.Context, input *Input) (bool, error) { return true, nil },
+			name:             "match at least one required policies",
+			requiredPolicies: []string{"negative-policy-1", "positive-policy-1"},
+			declaredPolicies: Policies{
+				"negative-policy-1": func(ctx context.Context, input *Input) (bool, error) { return false, nil },
+				"positive-policy-1": func(ctx context.Context, input *Input) (bool, error) { return true, nil },
 			},
-			match:       guard.MatchAtLeastOne,
-			wantAllowed: true,
+			match:          guard.MatchAtLeastOne,
+			allowAssertion: assert.True,
 		},
 		{
-			name:     "match at least one: fail",
-			policies: []string{"negative-1", "negative-2"},
-			policyMap: Policies{
-				"negative-1": func(ctx context.Context, input *Input) (bool, error) { return false, nil },
-				"negative-2": func(ctx context.Context, input *Input) (bool, error) { return false, nil },
+			name:             "no match at least one required policies",
+			requiredPolicies: []string{"negative-policy-1", "negative-policy-2"},
+			declaredPolicies: Policies{
+				"negative-policy-1": func(ctx context.Context, input *Input) (bool, error) { return false, nil },
+				"negative-policy-2": func(ctx context.Context, input *Input) (bool, error) { return false, nil },
 			},
-			match:       guard.MatchAtLeastOne,
-			wantAllowed: false,
+			match:          guard.MatchAtLeastOne,
+			allowAssertion: assert.False,
 		},
 		{
-			name:     "unknown match type",
-			policies: []string{"positive-1", "positive-2"},
-			policyMap: Policies{
+			name:             "unknown match type",
+			requiredPolicies: []string{"positive-1", "positive-2"},
+			declaredPolicies: Policies{
 				"positive-1": func(ctx context.Context, input *Input) (bool, error) { return true, nil },
 				"positive-2": func(ctx context.Context, input *Input) (bool, error) { return true, nil },
 			},
 			match:        guard.Match(-1),
-			wantAllowed:  false,
-			errAssertion: true,
+			errAssertion: assert.Error,
 		},
 		{
-			name:         "undefined policy",
-			policies:     []string{"undefined-policy"},
-			policyMap:    Policies{},
-			match:        guard.Match(-1),
-			wantAllowed:  false,
-			errAssertion: true,
+			name:             "undefined policy",
+			requiredPolicies: []string{"undefined-policy"},
+			declaredPolicies: Policies{},
+			match:            guard.Match(-1),
+			errAssertion: func(t assert.TestingT, err error, _ ...interface{}) bool {
+				return assert.ErrorIs(t, err, ErrUndefinedPolicy)
+			},
 		},
 		{
-			name:     "policy error",
-			policies: []string{"positive-1", "positive-2"},
-			policyMap: Policies{
+			name:             "nil policy",
+			requiredPolicies: []string{"undefined-policy"},
+			declaredPolicies: Policies{},
+			match:            guard.Match(-1),
+			errAssertion: func(t assert.TestingT, err error, _ ...interface{}) bool {
+				return assert.ErrorIs(t, err, ErrUndefinedPolicy)
+			},
+		},
+		{
+			name:             "error policy",
+			requiredPolicies: []string{"positive-1", "positive-2"},
+			declaredPolicies: Policies{
 				"positive-1": func(ctx context.Context, input *Input) (bool, error) { return false, errors.New("error") },
 				"positive-2": func(ctx context.Context, input *Input) (bool, error) { return true, nil },
 			},
 			match:        guard.MatchAll,
-			wantAllowed:  false,
-			errAssertion: true,
+			errAssertion: assert.Error,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			i := &Interceptor{
-				policies: tt.policyMap,
+				policies: tt.declaredPolicies,
 			}
 
 			policyBased := &guard.PolicyBased{
-				Policies: tt.policies,
+				Policies: tt.requiredPolicies,
 				Match:    tt.match,
 			}
 
 			allowed, err := i.evaluatePolicyBasedAccess(context.Background(), policyBased, &Input{})
-			if tt.errAssertion {
-				assert.Error(t, err)
+			if tt.errAssertion != nil {
+				tt.errAssertion(t, err)
 				return
 			}
 
 			require.NoError(t, err)
-			assert.Equal(t, tt.wantAllowed, allowed)
+			tt.allowAssertion(t, allowed)
 		})
 	}
 }

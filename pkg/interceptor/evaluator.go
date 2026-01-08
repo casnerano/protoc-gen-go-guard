@@ -149,6 +149,6 @@ func (i *Interceptor) evaluatePolicyBasedAccess(ctx context.Context, policyBased
 	case guard.MatchAtLeastOne:
 		return matchedPolicies > 0, nil
 	default:
-		return false, fmt.Errorf("unknown policies match type")
+		return false, fmt.Errorf("unknown requredPolicies match type")
 	}
 }
