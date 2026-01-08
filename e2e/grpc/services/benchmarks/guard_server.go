@@ -38,12 +38,12 @@ func NewGuardServer() *grpc.Server {
 				return nil, nil
 			}
 
-			subject := interceptor.Subject{}
+			curSubject := interceptor.Subject{}
 			if roles, exists := md["roles"]; exists {
-				subject.Roles = roles
+				curSubject.Roles = roles
 			}
 
-			return &subject, nil
+			return &curSubject, nil
 		},
 	)
 

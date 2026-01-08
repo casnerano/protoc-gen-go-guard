@@ -67,7 +67,7 @@ func subjectFromContext(ctx context.Context) *subject {
 		curSubject.roles = roles
 	}
 
-	return nil
+	return &curSubject
 }
 
 func matchAllRequiredRoles(subjectRoles []string) bool {
