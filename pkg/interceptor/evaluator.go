@@ -9,7 +9,8 @@ import (
 )
 
 var (
-	ErrPolicyUndefined = errors.New("policy undefined")
+	ErrUndefinedPolicy = errors.New("undefined policy")
+	ErrInvalidPolicy   = errors.New("invalid policy")
 )
 
 // evaluateRules checks a list of rules in order. Access is granted if any rule allows it.
@@ -117,11 +118,11 @@ func (i *Interceptor) evaluatePolicyBasedAccess(ctx context.Context, policyBased
 	for _, policyName := range policyBased.Policies {
 		policy, exists := i.policies[policyName]
 		if !exists {
-			return false, fmt.Errorf("policy %q not defined: %w", policyName, ErrPolicyUndefined)
+			return false, fmt.Errorf("policy %q not defined: %w", policyName, ErrUndefinedPolicy)
 		}
 
 		if policy == nil {
-			return false, nil
+			return false, fmt.Errorf("policy %q is nil: %w", policyName, ErrInvalidPolicy)
 		}
 
 		allowed, err := policy(ctx, input)

@@ -12,49 +12,50 @@ import (
 
 func Test_interceptor_evaluateRules(t *testing.T) {
 	tests := []struct {
-		name        string
-		rules       guard.Rules
-		policies    Policies
-		input       *Input
-		wantAllowed bool
-		wantErr     bool
+		name     string
+		input    Input
+		rules    guard.Rules
+		policies Policies
+
+		allowAssertion assert.BoolAssertionFunc
+		errAssertion   assert.ErrorAssertionFunc
 	}{
 		{
-			name:        "nil rules",
-			rules:       nil,
-			wantAllowed: false,
+			name:           "nil rules without subject",
+			rules:          nil,
+			allowAssertion: assert.False,
 		},
 		{
-			name:        "empty rules",
-			rules:       guard.Rules{},
-			wantAllowed: false,
+			name:           "empty rules without subject",
+			rules:          guard.Rules{},
+			allowAssertion: assert.False,
 		},
 		{
-			name: "one allow rule",
+			name: "one allow public rule without subject",
 			rules: guard.Rules{
 				{AllowPublic: guard.Ptr(true)},
 			},
-			wantAllowed: true,
+			allowAssertion: assert.True,
 		},
 		{
-			name: "one deny rule",
+			name: "one require authentication rule without subject",
 			rules: guard.Rules{
 				{RequireAuthentication: guard.Ptr(true)},
 			},
-			input:       &Input{Subject: nil},
-			wantAllowed: false,
+			allowAssertion: assert.False,
 		},
 		{
-			name: "multiple rules with one allow",
+			name:  "multiple rules when one allow rule with subject",
+			input: Input{Subject: &Subject{}},
 			rules: guard.Rules{
 				{RequireAuthentication: guard.Ptr(true)},
 				{AllowPublic: guard.Ptr(false)},
 			},
-			input:       &Input{Subject: &Subject{}},
-			wantAllowed: true,
+			allowAssertion: assert.True,
 		},
 		{
-			name: "multiple rules without allowed",
+			name:  "multiple rules when not allow rules with subject",
+			input: Input{Subject: &Subject{Roles: []string{}}},
 			rules: guard.Rules{
 				{
 					AuthenticatedAccess: &guard.AuthenticatedAccess{
@@ -73,9 +74,28 @@ func Test_interceptor_evaluateRules(t *testing.T) {
 					},
 				},
 			},
-			policies:    Policies{"negative-policy": nil},
-			input:       &Input{Subject: &Subject{Roles: []string{"user"}}},
-			wantAllowed: false,
+			policies: Policies{"negative-policy": func(ctx context.Context, input *Input) (bool, error) {
+				return false, nil
+			}},
+			allowAssertion: assert.False,
+		},
+		{
+			name:  "one policy rule when unknown match type with subject",
+			input: Input{Subject: &Subject{}},
+			rules: guard.Rules{
+				{
+					AuthenticatedAccess: &guard.AuthenticatedAccess{
+						PolicyBased: &guard.PolicyBased{
+							Policies: []string{"positive-policy"},
+							Match:    guard.Match(-1),
+						},
+					},
+				},
+			},
+			policies: Policies{"positive-policy": func(ctx context.Context, input *Input) (bool, error) {
+				return true, nil
+			}},
+			errAssertion: assert.Error,
 		},
 	}
 
@@ -85,19 +105,14 @@ func Test_interceptor_evaluateRules(t *testing.T) {
 				policies: tt.policies,
 			}
 
-			input := tt.input
-			if input == nil {
-				input = &Input{}
-			}
-
-			allowed, err := i.evaluateRules(context.Background(), tt.rules, input)
-			if tt.wantErr {
-				assert.Error(t, err)
+			allowed, err := i.evaluateRules(context.Background(), tt.rules, &tt.input)
+			if tt.errAssertion != nil {
+				tt.errAssertion(t, err)
 				return
 			}
 
 			require.NoError(t, err)
-			assert.Equal(t, tt.wantAllowed, allowed)
+			tt.allowAssertion(t, allowed)
 		})
 	}
 }
@@ -194,7 +209,7 @@ func Test_interceptor_evaluateRoleBasedAccess(t *testing.T) {
 		subjectRoles []string
 		match        guard.Match
 		wantAllowed  bool
-		wantErr      bool
+		errAssertion bool
 	}{
 		{
 			name:        "no roles",
@@ -228,7 +243,7 @@ func Test_interceptor_evaluateRoleBasedAccess(t *testing.T) {
 			subjectRoles: []string{"admin"},
 			match:        guard.Match(-1),
 			wantAllowed:  false,
-			wantErr:      true,
+			errAssertion: true,
 		},
 	}
 
@@ -248,7 +263,7 @@ func Test_interceptor_evaluateRoleBasedAccess(t *testing.T) {
 			}
 
 			allowed, err := i.evaluateRoleBasedAccess(context.Background(), roleBased, input)
-			if tt.wantErr {
+			if tt.errAssertion {
 				assert.Error(t, err)
 				return
 			}
@@ -261,12 +276,12 @@ func Test_interceptor_evaluateRoleBasedAccess(t *testing.T) {
 
 func Test_interceptor_evaluatePolicyBasedAccess(t *testing.T) {
 	tests := []struct {
-		name        string
-		policies    []string
-		policyMap   Policies
-		match       guard.Match
-		wantAllowed bool
-		wantErr     bool
+		name         string
+		policies     []string
+		policyMap    Policies
+		match        guard.Match
+		wantAllowed  bool
+		errAssertion bool
 	}{
 		{
 			name:        "no policies",
@@ -320,17 +335,17 @@ func Test_interceptor_evaluatePolicyBasedAccess(t *testing.T) {
 				"positive-1": func(ctx context.Context, input *Input) (bool, error) { return true, nil },
 				"positive-2": func(ctx context.Context, input *Input) (bool, error) { return true, nil },
 			},
-			match:       guard.Match(-1),
-			wantAllowed: false,
-			wantErr:     true,
+			match:        guard.Match(-1),
+			wantAllowed:  false,
+			errAssertion: true,
 		},
 		{
-			name:        "undefined policy",
-			policies:    []string{"non-exists-1"},
-			policyMap:   Policies{},
-			match:       guard.Match(-1),
-			wantAllowed: false,
-			wantErr:     true,
+			name:         "undefined policy",
+			policies:     []string{"non-exists-1"},
+			policyMap:    Policies{},
+			match:        guard.Match(-1),
+			wantAllowed:  false,
+			errAssertion: true,
 		},
 		{
 			name:     "policy error",
@@ -339,9 +354,9 @@ func Test_interceptor_evaluatePolicyBasedAccess(t *testing.T) {
 				"positive-1": func(ctx context.Context, input *Input) (bool, error) { return false, errors.New("error") },
 				"positive-2": func(ctx context.Context, input *Input) (bool, error) { return true, nil },
 			},
-			match:       guard.MatchAll,
-			wantAllowed: false,
-			wantErr:     true,
+			match:        guard.MatchAll,
+			wantAllowed:  false,
+			errAssertion: true,
 		},
 	}
 
@@ -357,7 +372,7 @@ func Test_interceptor_evaluatePolicyBasedAccess(t *testing.T) {
 			}
 
 			allowed, err := i.evaluatePolicyBasedAccess(context.Background(), policyBased, &Input{})
-			if tt.wantErr {
+			if tt.errAssertion {
 				assert.Error(t, err)
 				return
 			}
