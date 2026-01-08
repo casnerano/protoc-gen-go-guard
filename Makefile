@@ -33,17 +33,19 @@ clean:
 
 .PHONY: test
 test:
-	go test -count=1 -tags=integration ./...
+	go test -race -count=1 -tags=integration ./...
+
+cover-profile:
+	go test -race -count=1 -cover -coverprofile=coverage.temp.out -covermode=atomic ./...
+	grep -vE ${GO_COVER_EXCLUDE} coverage.temp.out > coverage.out && rm coverage.temp.out
 
 .PHONY: test-cover
-test-cover:
-	go test -count=1 -cover -coverprofile=cover.temp.out -covermode=atomic ./...
-	grep -vE ${GO_COVER_EXCLUDE} cover.temp.out > cover.out && rm cover.temp.out
-	go tool cover -func cover.out
+test-cover: cover-profile
+	go tool cover -func coverage.out
 
-.PHONY: test-cover-with-html
-test-cover-with-html: test-cover
-	go tool cover -html=cover.out
+.PHONY: test-cover-html
+test-cover-html: cover-profile
+	go tool cover -html=coverage.out
 
 .PHONY: lint
 lint:

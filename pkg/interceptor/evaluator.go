@@ -9,7 +9,8 @@ import (
 )
 
 var (
-	ErrPolicyUndefined = errors.New("policy undefined")
+	ErrUndefinedPolicy = errors.New("undefined policy")
+	ErrInvalidPolicy   = errors.New("invalid policy")
 )
 
 // evaluateRules checks a list of rules in order. Access is granted if any rule allows it.
@@ -29,7 +30,8 @@ func (i *Interceptor) evaluateRules(ctx context.Context, rules guard.Rules, inpu
 	return false, nil
 }
 
-// evaluateRule checks a single rule. Returns true if the rule allows access.
+// evaluateRule checks a single rule.
+// Returns true if the rule allows access.
 func (i *Interceptor) evaluateRule(ctx context.Context, rule *guard.Rule, input *Input) (bool, error) {
 	if rule.AllowPublic != nil && *rule.AllowPublic {
 		return true, nil
@@ -48,29 +50,36 @@ func (i *Interceptor) evaluateRule(ctx context.Context, rule *guard.Rule, input 
 			return false, nil
 		}
 
+		var (
+			err error
+
+			allowedRoleBased   bool
+			allowedPolicyBased bool
+		)
+
 		if rule.AuthenticatedAccess.RoleBased != nil {
-			allowed, err := i.evaluateRoleBasedAccess(ctx, rule.AuthenticatedAccess.RoleBased, input)
+			allowedRoleBased, err = i.evaluateRoleBasedAccess(ctx, rule.AuthenticatedAccess.RoleBased, input)
 			if err != nil {
 				return false, err
 			}
 
-			if !allowed {
+			if !allowedRoleBased {
 				return false, nil
 			}
 		}
 
 		if rule.AuthenticatedAccess.PolicyBased != nil {
-			allowed, err := i.evaluatePolicyBasedAccess(ctx, rule.AuthenticatedAccess.PolicyBased, input)
+			allowedPolicyBased, err = i.evaluatePolicyBasedAccess(ctx, rule.AuthenticatedAccess.PolicyBased, input)
 			if err != nil {
 				return false, err
 			}
 
-			if !allowed {
+			if !allowedPolicyBased {
 				return false, nil
 			}
 		}
 
-		return true, nil
+		return allowedRoleBased || allowedPolicyBased, nil
 	}
 
 	return false, nil
@@ -117,11 +126,11 @@ func (i *Interceptor) evaluatePolicyBasedAccess(ctx context.Context, policyBased
 	for _, policyName := range policyBased.Policies {
 		policy, exists := i.policies[policyName]
 		if !exists {
-			return false, fmt.Errorf("policy %q not defined: %w", policyName, ErrPolicyUndefined)
+			return false, fmt.Errorf("policy %q not defined: %w", policyName, ErrUndefinedPolicy)
 		}
 
 		if policy == nil {
-			return false, nil
+			return false, fmt.Errorf("policy %q is nil: %w", policyName, ErrInvalidPolicy)
 		}
 
 		allowed, err := policy(ctx, input)
@@ -140,6 +149,6 @@ func (i *Interceptor) evaluatePolicyBasedAccess(ctx context.Context, policyBased
 	case guard.MatchAtLeastOne:
 		return matchedPolicies > 0, nil
 	default:
-		return false, fmt.Errorf("unknown policies match type")
+		return false, fmt.Errorf("unknown requredPolicies match type")
 	}
 }
