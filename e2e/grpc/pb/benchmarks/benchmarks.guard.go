@@ -10,8 +10,8 @@ import (
 	"github.com/casnerano/protoc-gen-go-guard/pkg/guard"
 )
 
-var guardService_DefaultRules = guard.Service{
-	Name: "DefaultRules",
+var guardService_Benchmarks = guard.Service{
+	Name: "Benchmarks",
 	Methods: map[string]*guard.Method{
 		"AuthenticatedAccessMethod": {
 			Rules: []*guard.Rule{
@@ -32,8 +32,8 @@ var guardService_DefaultRules = guard.Service{
 				{
 					AuthenticatedAccess: &guard.AuthenticatedAccess{
 						RoleBased: &guard.RoleBased{
-							Roles: []string{"admin"},
-							Match: guard.Match(0),
+							Roles: []string{"first", "second"},
+							Match: guard.Match(1),
 						},
 					},
 				},
@@ -42,6 +42,6 @@ var guardService_DefaultRules = guard.Service{
 	},
 }
 
-func (UnimplementedDefaultRulesServer) GuardService() *guard.Service {
-	return &guardService_DefaultRules
+func (UnimplementedBenchmarksServer) GuardService() *guard.Service {
+	return &guardService_Benchmarks
 }

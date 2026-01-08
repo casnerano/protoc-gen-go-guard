@@ -86,7 +86,7 @@ guardInterceptor := interceptor.New(
 )
 
 server := grpc.NewServer(
-    grpc.ChainUnaryInterceptor(
+    grpc.UnaryInterceptor(
         guardInterceptor.Unary(),
     ),
 )

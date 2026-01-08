@@ -19,158 +19,158 @@ import (
 // Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
-// DefaultRulesClient is the client API for DefaultRules service.
+// BenchmarksClient is the client API for Benchmarks service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type DefaultRulesClient interface {
+type BenchmarksClient interface {
 	PublicAccessMethod(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	AuthenticatedAccessMethod(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	RoleBasedAccessMethod(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
-type defaultRulesClient struct {
+type benchmarksClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewDefaultRulesClient(cc grpc.ClientConnInterface) DefaultRulesClient {
-	return &defaultRulesClient{cc}
+func NewBenchmarksClient(cc grpc.ClientConnInterface) BenchmarksClient {
+	return &benchmarksClient{cc}
 }
 
-func (c *defaultRulesClient) PublicAccessMethod(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *benchmarksClient) PublicAccessMethod(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/e2e.benchmarks.DefaultRules/PublicAccessMethod", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/e2e.benchmarks.Benchmarks/PublicAccessMethod", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *defaultRulesClient) AuthenticatedAccessMethod(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *benchmarksClient) AuthenticatedAccessMethod(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/e2e.benchmarks.DefaultRules/AuthenticatedAccessMethod", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/e2e.benchmarks.Benchmarks/AuthenticatedAccessMethod", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *defaultRulesClient) RoleBasedAccessMethod(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *benchmarksClient) RoleBasedAccessMethod(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/e2e.benchmarks.DefaultRules/RoleBasedAccessMethod", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/e2e.benchmarks.Benchmarks/RoleBasedAccessMethod", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// DefaultRulesServer is the server API for DefaultRules service.
-// All implementations must embed UnimplementedDefaultRulesServer
+// BenchmarksServer is the server API for Benchmarks service.
+// All implementations must embed UnimplementedBenchmarksServer
 // for forward compatibility
-type DefaultRulesServer interface {
+type BenchmarksServer interface {
 	PublicAccessMethod(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
 	AuthenticatedAccessMethod(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
 	RoleBasedAccessMethod(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
-	mustEmbedUnimplementedDefaultRulesServer()
+	mustEmbedUnimplementedBenchmarksServer()
 }
 
-// UnimplementedDefaultRulesServer must be embedded to have forward compatible implementations.
-type UnimplementedDefaultRulesServer struct {
+// UnimplementedBenchmarksServer must be embedded to have forward compatible implementations.
+type UnimplementedBenchmarksServer struct {
 }
 
-func (UnimplementedDefaultRulesServer) PublicAccessMethod(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
+func (UnimplementedBenchmarksServer) PublicAccessMethod(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PublicAccessMethod not implemented")
 }
-func (UnimplementedDefaultRulesServer) AuthenticatedAccessMethod(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
+func (UnimplementedBenchmarksServer) AuthenticatedAccessMethod(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AuthenticatedAccessMethod not implemented")
 }
-func (UnimplementedDefaultRulesServer) RoleBasedAccessMethod(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
+func (UnimplementedBenchmarksServer) RoleBasedAccessMethod(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RoleBasedAccessMethod not implemented")
 }
-func (UnimplementedDefaultRulesServer) mustEmbedUnimplementedDefaultRulesServer() {}
+func (UnimplementedBenchmarksServer) mustEmbedUnimplementedBenchmarksServer() {}
 
-// UnsafeDefaultRulesServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to DefaultRulesServer will
+// UnsafeBenchmarksServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to BenchmarksServer will
 // result in compilation errors.
-type UnsafeDefaultRulesServer interface {
-	mustEmbedUnimplementedDefaultRulesServer()
+type UnsafeBenchmarksServer interface {
+	mustEmbedUnimplementedBenchmarksServer()
 }
 
-func RegisterDefaultRulesServer(s grpc.ServiceRegistrar, srv DefaultRulesServer) {
-	s.RegisterService(&DefaultRules_ServiceDesc, srv)
+func RegisterBenchmarksServer(s grpc.ServiceRegistrar, srv BenchmarksServer) {
+	s.RegisterService(&Benchmarks_ServiceDesc, srv)
 }
 
-func _DefaultRules_PublicAccessMethod_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Benchmarks_PublicAccessMethod_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(DefaultRulesServer).PublicAccessMethod(ctx, in)
+		return srv.(BenchmarksServer).PublicAccessMethod(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/e2e.benchmarks.DefaultRules/PublicAccessMethod",
+		FullMethod: "/e2e.benchmarks.Benchmarks/PublicAccessMethod",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DefaultRulesServer).PublicAccessMethod(ctx, req.(*emptypb.Empty))
+		return srv.(BenchmarksServer).PublicAccessMethod(ctx, req.(*emptypb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _DefaultRules_AuthenticatedAccessMethod_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Benchmarks_AuthenticatedAccessMethod_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(DefaultRulesServer).AuthenticatedAccessMethod(ctx, in)
+		return srv.(BenchmarksServer).AuthenticatedAccessMethod(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/e2e.benchmarks.DefaultRules/AuthenticatedAccessMethod",
+		FullMethod: "/e2e.benchmarks.Benchmarks/AuthenticatedAccessMethod",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DefaultRulesServer).AuthenticatedAccessMethod(ctx, req.(*emptypb.Empty))
+		return srv.(BenchmarksServer).AuthenticatedAccessMethod(ctx, req.(*emptypb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _DefaultRules_RoleBasedAccessMethod_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Benchmarks_RoleBasedAccessMethod_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(DefaultRulesServer).RoleBasedAccessMethod(ctx, in)
+		return srv.(BenchmarksServer).RoleBasedAccessMethod(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/e2e.benchmarks.DefaultRules/RoleBasedAccessMethod",
+		FullMethod: "/e2e.benchmarks.Benchmarks/RoleBasedAccessMethod",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DefaultRulesServer).RoleBasedAccessMethod(ctx, req.(*emptypb.Empty))
+		return srv.(BenchmarksServer).RoleBasedAccessMethod(ctx, req.(*emptypb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-// DefaultRules_ServiceDesc is the grpc.ServiceDesc for DefaultRules service.
+// Benchmarks_ServiceDesc is the grpc.ServiceDesc for Benchmarks service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var DefaultRules_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "e2e.benchmarks.DefaultRules",
-	HandlerType: (*DefaultRulesServer)(nil),
+var Benchmarks_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "e2e.benchmarks.Benchmarks",
+	HandlerType: (*BenchmarksServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "PublicAccessMethod",
-			Handler:    _DefaultRules_PublicAccessMethod_Handler,
+			Handler:    _Benchmarks_PublicAccessMethod_Handler,
 		},
 		{
 			MethodName: "AuthenticatedAccessMethod",
-			Handler:    _DefaultRules_AuthenticatedAccessMethod_Handler,
+			Handler:    _Benchmarks_AuthenticatedAccessMethod_Handler,
 		},
 		{
 			MethodName: "RoleBasedAccessMethod",
-			Handler:    _DefaultRules_RoleBasedAccessMethod_Handler,
+			Handler:    _Benchmarks_RoleBasedAccessMethod_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

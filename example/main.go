@@ -55,7 +55,7 @@ func main() {
 	)
 
 	server := grpc.NewServer(
-		grpc.ChainUnaryInterceptor(
+		grpc.UnaryInterceptor(
 			guardInterceptor.Unary(),
 		),
 	)
