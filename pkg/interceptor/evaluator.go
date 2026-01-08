@@ -30,7 +30,8 @@ func (i *Interceptor) evaluateRules(ctx context.Context, rules guard.Rules, inpu
 	return false, nil
 }
 
-// evaluateRule checks a single rule. Returns true if the rule allows access.
+// evaluateRule checks a single rule.
+// Returns true if the rule allows access.
 func (i *Interceptor) evaluateRule(ctx context.Context, rule *guard.Rule, input *Input) (bool, error) {
 	if rule.AllowPublic != nil && *rule.AllowPublic {
 		return true, nil
@@ -49,29 +50,36 @@ func (i *Interceptor) evaluateRule(ctx context.Context, rule *guard.Rule, input 
 			return false, nil
 		}
 
+		var (
+			err error
+
+			allowedRoleBased   bool
+			allowedPolicyBased bool
+		)
+
 		if rule.AuthenticatedAccess.RoleBased != nil {
-			allowed, err := i.evaluateRoleBasedAccess(ctx, rule.AuthenticatedAccess.RoleBased, input)
+			allowedRoleBased, err = i.evaluateRoleBasedAccess(ctx, rule.AuthenticatedAccess.RoleBased, input)
 			if err != nil {
 				return false, err
 			}
 
-			if !allowed {
+			if !allowedRoleBased {
 				return false, nil
 			}
 		}
 
 		if rule.AuthenticatedAccess.PolicyBased != nil {
-			allowed, err := i.evaluatePolicyBasedAccess(ctx, rule.AuthenticatedAccess.PolicyBased, input)
+			allowedPolicyBased, err = i.evaluatePolicyBasedAccess(ctx, rule.AuthenticatedAccess.PolicyBased, input)
 			if err != nil {
 				return false, err
 			}
 
-			if !allowed {
+			if !allowedPolicyBased {
 				return false, nil
 			}
 		}
 
-		return true, nil
+		return allowedRoleBased || allowedPolicyBased, nil
 	}
 
 	return false, nil
