@@ -36,8 +36,8 @@ test:
 	go test -race -count=1 -tags=integration ./...
 
 cover-profile:
-	go test -race -count=1 -cover -coverprofile=cover.temp.out -covermode=atomic ./...
-	grep -vE ${GO_COVER_EXCLUDE} cover.temp.out > cover.out && rm cover.temp.out
+	go test -race -count=1 -cover -coverprofile=coverage.temp.out -covermode=atomic ./...
+	grep -vE ${GO_COVER_EXCLUDE} coverage.temp.out > coverage.out && rm coverage.temp.out
 
 .PHONY: test-cover
 test-cover: cover-profile
