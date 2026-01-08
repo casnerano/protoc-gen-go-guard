@@ -41,7 +41,7 @@ cover-profile:
 
 .PHONY: test-cover
 test-cover: cover-profile
-	go tool cover -func cover.out
+	go tool cover -func coverage.out
 
 .PHONY: test-cover-html
 test-cover-html: cover-profile
