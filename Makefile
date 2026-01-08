@@ -40,6 +40,13 @@ clean:
 test:
 	go test -race -count=1 -tags=e2e ./...
 
+.PHONY: test
+test:
+	go test -race -count=1 -tags=e2e ./...
+
+bench:
+	go test -bench=. -benchtime=3s -benchmem -count=3 -tags=e2e ./e2e/grpc/...
+
 cover-profile:
 	go test -race -count=1 -cover -coverprofile=coverage.temp.out -covermode=atomic ./...
 	grep -vE ${GO_COVER_EXCLUDE} coverage.temp.out > coverage.out && rm coverage.temp.out
