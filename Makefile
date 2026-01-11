@@ -5,7 +5,7 @@ GO_COVER_EXCLUDE := "example|e2e|.*\.pb\.go"
 .PHONY: download-bin-deps
 download-bin-deps:
 	ls $(LOCAL_BIN)/golangci-lint &> /dev/null || GOBIN=$(LOCAL_BIN) go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.7.2
-	ls $(LOCAL_BIN)/buf &> /dev/null || GOBIN=$(LOCAL_BIN) go install github.com/bufbuild/buf/cmd/buf@latest
+	#ls $(LOCAL_BIN)/buf &> /dev/null || GOBIN=$(LOCAL_BIN) go install github.com/bufbuild/buf/cmd/buf@latest
 	ls $(LOCAL_BIN)/protoc-gen-go &> /dev/null || GOBIN=$(LOCAL_BIN) go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28.1
 	ls $(LOCAL_BIN)/protoc-gen-go-grpc &> /dev/null || GOBIN=$(LOCAL_BIN) go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2.0
 
@@ -62,3 +62,31 @@ test-cover-html: cover-profile
 .PHONY: lint
 lint:
 	$(LOCAL_BIN)/golangci-lint run ./...
+
+.PHONY: generate-guard-proto
+generate-guard-proto:
+	protoc \
+	  --proto_path=. \
+	  \
+	  --plugin=protoc-gen-go=$(LOCAL_BIN)/protoc-gen-go \
+	  --go_out=. \
+	  --go_opt=paths=source_relative \
+      \
+	  ./proto/guard.proto
+
+.PHONY: generate-example-proto
+generate-example-proto:
+	protoc \
+	  --proto_path=. \
+	  \
+	  --plugin=protoc-gen-go=$(LOCAL_BIN)/protoc-gen-go \
+	  --go_out=. \
+	  --go_opt=paths=source_relative \
+	  \
+	  --plugin=protoc-gen-go-grpc=$(LOCAL_BIN)/protoc-gen-go-grpc \
+	  --go-grpc_out=. \
+	  --go-grpc_opt=paths=source_relative \
+	  \
+	  --plugin=protoc-gen-go-guard=$(LOCAL_BIN)/protoc-gen-go-guard \
+      \
+	  ./example/api/demo/*.proto
