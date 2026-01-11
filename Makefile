@@ -5,28 +5,47 @@ GO_COVER_EXCLUDE := "example|e2e|.*\.pb\.go"
 .PHONY: download-bin-deps
 download-bin-deps:
 	ls $(LOCAL_BIN)/golangci-lint &> /dev/null || GOBIN=$(LOCAL_BIN) go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.7.2
-	ls $(LOCAL_BIN)/buf &> /dev/null || GOBIN=$(LOCAL_BIN) go install github.com/bufbuild/buf/cmd/buf@latest
 	ls $(LOCAL_BIN)/protoc-gen-go &> /dev/null || GOBIN=$(LOCAL_BIN) go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28.1
 	ls $(LOCAL_BIN)/protoc-gen-go-grpc &> /dev/null || GOBIN=$(LOCAL_BIN) go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2.0
-
-.PHONY: generate-guard-proto
-generate-guard-proto:
-	$(LOCAL_BIN)/buf generate --config ${CURDIR}/buf.yaml --template ${CURDIR}/buf.go.gen.yaml --path ./proto
-
-.PHONY: generate-e2e-proto
-generate-e2e-proto:
-	$(LOCAL_BIN)/buf generate --config ${CURDIR}/buf.yaml --template ${CURDIR}/buf.grpc.gen.yaml --path ./e2e
-
-.PHONY: generate-example-proto
-generate-example-proto:
-	$(LOCAL_BIN)/buf generate --config ${CURDIR}/buf.yaml --template ${CURDIR}/buf.grpc.gen.yaml --path ./example
 
 .PHONY: build-protoc-gen-go-guard
 build-protoc-gen-go-guard:
 	go build -o ${LOCAL_BIN}/protoc-gen-go-guard ./cmd/protoc-gen-go-guard
 
+.PHONY: generate-guard-proto
+generate-guard-proto:
+	protoc \
+	  --proto_path=. \
+	  \
+	  --plugin=protoc-gen-go=$(LOCAL_BIN)/protoc-gen-go \
+	  --go_out=. \
+	  --go_opt=module=github.com/casnerano/protoc-gen-go-guard \
+      \
+	  ./proto/guard.proto
+
+.PHONY: generate-other-proto
+generate-other-proto:
+	protoc \
+	  --proto_path=. \
+	  \
+	  --plugin=protoc-gen-go=$(LOCAL_BIN)/protoc-gen-go \
+	  --go_out=. \
+	  --go_opt=module=github.com/casnerano/protoc-gen-go-guard \
+	  \
+	  --plugin=protoc-gen-go-grpc=$(LOCAL_BIN)/protoc-gen-go-grpc \
+	  --go-grpc_out=. \
+	  --go-grpc_opt=module=github.com/casnerano/protoc-gen-go-guard \
+	  \
+	  --plugin=protoc-gen-go-guard=$(LOCAL_BIN)/protoc-gen-go-guard \
+	  --go-guard_out=. \
+	  --go-guard_opt=module=github.com/casnerano/protoc-gen-go-guard \
+      \
+	  ./example/api/demo/*.proto \
+	  ./e2e/grpc/api/benchmarks/*.proto \
+	  ./e2e/grpc/api/corner_cases/*.proto
+
 .PHONY: generate
-generate: download-bin-deps generate-guard-proto build-protoc-gen-go-guard generate-e2e-proto generate-example-proto
+generate: download-bin-deps generate-guard-proto build-protoc-gen-go-guard generate-other-proto
 	go mod tidy
 
 .PHONY: clean
@@ -35,10 +54,6 @@ clean:
 	rm -rf ./proto/*.pb.go
 	rm -rf ./e2e/grpc/pb/*.pb.go
 	rm -rf ./example/pb/*.pb.go
-
-.PHONY: test
-test:
-	go test -race -count=1 -tags=e2e ./...
 
 .PHONY: test
 test:
