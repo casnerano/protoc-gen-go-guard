@@ -58,8 +58,8 @@ func Test_interceptor_getRules(t *testing.T) {
 		authenticatedAccessRule: &guard.Rule{
 			AuthenticatedAccess: &guard.AuthenticatedAccess{
 				RoleBased: &guard.RoleBased{
-					Roles: []string{"admin"},
-					Match: guard.MatchAtLeastOne,
+					Roles:       []string{"admin"},
+					Requirement: guard.RequirementAtLeastOne,
 				},
 			},
 		},

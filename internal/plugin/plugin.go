@@ -174,23 +174,23 @@ func extractRule(pbRule *desc.Rule) *guard.Rule {
 
 			if roleBased := mode.AuthenticatedAccess.RoleBased; roleBased != nil {
 				authenticatedAccess.RoleBased = &guard.RoleBased{
-					Roles: roleBased.Roles,
-					Match: guard.MatchAtLeastOne,
+					Roles:       roleBased.Roles,
+					Requirement: guard.RequirementAtLeastOne,
 				}
 
-				if roleBased.Match != nil {
-					authenticatedAccess.RoleBased.Match = guard.Match(*roleBased.Match)
+				if roleBased.Requirement != nil {
+					authenticatedAccess.RoleBased.Requirement = guard.Requirement(*roleBased.Requirement)
 				}
 			}
 
 			if policyBased := mode.AuthenticatedAccess.PolicyBased; policyBased != nil {
 				authenticatedAccess.PolicyBased = &guard.PolicyBased{
-					Policies: policyBased.Policies,
-					Match:    guard.MatchAtLeastOne,
+					Policies:    policyBased.Policies,
+					Requirement: guard.RequirementAtLeastOne,
 				}
 
-				if policyBased.Match != nil {
-					authenticatedAccess.PolicyBased.Match = guard.Match(*policyBased.Match)
+				if policyBased.Requirement != nil {
+					authenticatedAccess.PolicyBased.Requirement = guard.Requirement(*policyBased.Requirement)
 				}
 			}
 
