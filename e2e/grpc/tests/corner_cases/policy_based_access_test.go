@@ -39,7 +39,7 @@ func (s *PolicyBasedAccessTestsSuite) TestEmptyPoliciesWithAnyRequirement() {
 		canAccess bool
 	}{
 		{
-			name:      "access denied for authenticated and empty policies with at least one matching",
+			name:      "access denied for authenticated and empty policies with at least one requirement",
 			context:   testContextWithSubject(interceptor.Subject{}),
 			canAccess: false,
 		},

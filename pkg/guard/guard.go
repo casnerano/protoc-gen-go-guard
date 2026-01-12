@@ -2,11 +2,11 @@
 // that represent access control rules for gRPC services and methods.
 package guard
 
-type Match int
+type Requirement int
 
 const (
-	MatchAtLeastOne Match = iota
-	MatchAll
+	RequirementAtLeastOne Requirement = iota
+	RequirementAll
 )
 
 // Rule represents a single access control condition.
@@ -30,13 +30,13 @@ type AuthenticatedAccess struct {
 }
 
 type RoleBased struct {
-	Roles []string
-	Match Match
+	Roles       []string
+	Requirement Requirement
 }
 
 type PolicyBased struct {
-	Policies []string
-	Match    Match
+	Policies    []string
+	Requirement Requirement
 }
 
 type Service struct {

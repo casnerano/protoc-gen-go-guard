@@ -6,19 +6,19 @@ option go_package = "github.com/casnerano/protoc-gen-go-guard/proto;guard";
 
 import "google/protobuf/descriptor.proto";
 
-enum Match {
+enum Requirement {
   AT_LEAST_ONE = 0;
   ALL = 1;
 }
 
 message RoleBased {
   repeated string roles = 1;
-  optional Match match = 2;
+  optional Requirement requirement = 2;
 }
 
 message PolicyBased {
   repeated string policies = 1;
-  optional Match match = 2;
+  optional Requirement requirement = 2;
 }
 
 message Rule {

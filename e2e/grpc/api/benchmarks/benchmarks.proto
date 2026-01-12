@@ -21,7 +21,7 @@ service Benchmarks {
       authenticated_access: {
         role_based: {
           roles: ["first", "second"],
-          match: ALL
+          requirement: ALL
         }
       }
     };

@@ -9,24 +9,24 @@ import "proto/guard.proto";
 
 // Service with role-based access rules.
 service MixedTypesAccess {
-  // Override default rules: allow for admin role with at least one matching.
+  // Override default rules: allow for admin role with at least one requirement.
   option (guard.service_rules) = {
     authenticated_access: {
       role_based: {
         roles: ["admin"],
-        match: AT_LEAST_ONE
+        requirement: AT_LEAST_ONE
       }
     }
   };
 
   // Call with override rules.
   rpc OverrideWithPolicies(google.protobuf.Empty) returns (google.protobuf.Empty) {
-    // Override inherited rules: allow for policies with all matching.
+    // Override inherited rules: allow for policies with all requirement.
     option (guard.method_rules) = {
       authenticated_access: {
         policy_based: {
           policies: ["positive-policy-1"],
-          match: ALL
+          requirement: ALL
         }
       }
     };
@@ -35,12 +35,12 @@ service MixedTypesAccess {
 
   // Call with override rules.
   rpc OverrideWithRoles(google.protobuf.Empty) returns (google.protobuf.Empty) {
-    // Override inherited rules: allow for admin role with all matching.
+    // Override inherited rules: allow for admin role with all requirement.
     option (guard.method_rules) = {
       authenticated_access: {
         role_based: {
           roles: ["admin"],
-          match: ALL
+          requirement: ALL
         }
       }
     };

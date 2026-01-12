@@ -92,23 +92,23 @@ func (i *Interceptor) evaluateRoleBasedAccess(_ context.Context, roleBased *guar
 		return false, nil
 	}
 
-	var matchedRoles int
+	var matchedRolesCount int
 	for _, requiredRole := range roleBased.Roles {
 		for _, subjectRole := range input.Subject.Roles {
 			if requiredRole == subjectRole {
-				matchedRoles++
+				matchedRolesCount++
 				break
 			}
 		}
 	}
 
-	switch roleBased.Match {
-	case guard.MatchAll:
-		return matchedRoles == len(roleBased.Roles), nil
-	case guard.MatchAtLeastOne:
-		return matchedRoles > 0, nil
+	switch roleBased.Requirement {
+	case guard.RequirementAll:
+		return matchedRolesCount == len(roleBased.Roles), nil
+	case guard.RequirementAtLeastOne:
+		return matchedRolesCount > 0, nil
 	default:
-		return false, fmt.Errorf("unknown roles match type")
+		return false, fmt.Errorf("unknown roles requirement type")
 	}
 }
 
@@ -122,7 +122,7 @@ func (i *Interceptor) evaluatePolicyBasedAccess(ctx context.Context, policyBased
 		return false, nil
 	}
 
-	var matchedPolicies int
+	var passedPoliciesCount int
 	for _, policyName := range policyBased.Policies {
 		policy, exists := i.policies[policyName]
 		if !exists {
@@ -139,16 +139,16 @@ func (i *Interceptor) evaluatePolicyBasedAccess(ctx context.Context, policyBased
 		}
 
 		if allowed {
-			matchedPolicies++
+			passedPoliciesCount++
 		}
 	}
 
-	switch policyBased.Match {
-	case guard.MatchAll:
-		return matchedPolicies == len(policyBased.Policies), nil
-	case guard.MatchAtLeastOne:
-		return matchedPolicies > 0, nil
+	switch policyBased.Requirement {
+	case guard.RequirementAll:
+		return passedPoliciesCount == len(policyBased.Policies), nil
+	case guard.RequirementAtLeastOne:
+		return passedPoliciesCount > 0, nil
 	default:
-		return false, fmt.Errorf("unknown requredPolicies match type")
+		return false, fmt.Errorf("unknown requredPolicies requirement type")
 	}
 }

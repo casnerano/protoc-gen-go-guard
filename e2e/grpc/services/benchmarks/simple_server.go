@@ -38,7 +38,7 @@ func (s *SimpleServer) AuthenticatedAccessMethod(ctx context.Context, _ *emptypb
 
 func (s *SimpleServer) RoleBasedAccessMethod(ctx context.Context, _ *emptypb.Empty) (*emptypb.Empty, error) {
 	curSubject := subjectFromContext(ctx)
-	if curSubject == nil || !matchAllRequiredRoles(curSubject.roles) {
+	if curSubject == nil || !hasAllRequirementRoles(curSubject.roles) {
 		return nil, status.Error(codes.PermissionDenied, codes.PermissionDenied.String())
 	}
 
@@ -70,7 +70,7 @@ func subjectFromContext(ctx context.Context) *subject {
 	return &curSubject
 }
 
-func matchAllRequiredRoles(subjectRoles []string) bool {
+func hasAllRequirementRoles(subjectRoles []string) bool {
 	if len(subjectRoles) == 0 {
 		return false
 	}

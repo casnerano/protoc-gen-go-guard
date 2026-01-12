@@ -13,7 +13,7 @@ service PolicyBasedAccess {
       authenticated_access: {
         policy_based: {
           policies: [],
-          match: AT_LEAST_ONE
+          requirement: AT_LEAST_ONE
         }
       }
     };
@@ -24,7 +24,7 @@ service PolicyBasedAccess {
       authenticated_access: {
         policy_based: {
           policies: [],
-          match: ALL
+          requirement: ALL
         }
       }
     };
@@ -35,7 +35,7 @@ service PolicyBasedAccess {
       authenticated_access: {
         policy_based: {
           policies: ["positive-policy-1", "negative-policy-1"],
-          match: AT_LEAST_ONE
+          requirement: AT_LEAST_ONE
         }
       }
     };
@@ -46,7 +46,7 @@ service PolicyBasedAccess {
       authenticated_access: {
         policy_based: {
           policies: ["positive-policy-1", "negative-policy-1"],
-          match: ALL
+          requirement: ALL
         }
       }
     };

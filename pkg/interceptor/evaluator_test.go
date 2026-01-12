@@ -60,16 +60,16 @@ func Test_interceptor_evaluateRules(t *testing.T) {
 				{
 					AuthenticatedAccess: &guard.AuthenticatedAccess{
 						PolicyBased: &guard.PolicyBased{
-							Policies: []string{"negative-policy"},
-							Match:    guard.MatchAll,
+							Policies:    []string{"negative-policy"},
+							Requirement: guard.RequirementAll,
 						},
 					},
 				},
 				{
 					AuthenticatedAccess: &guard.AuthenticatedAccess{
 						RoleBased: &guard.RoleBased{
-							Roles: []string{"non-existing-role"},
-							Match: guard.MatchAll,
+							Roles:       []string{"non-existing-role"},
+							Requirement: guard.RequirementAll,
 						},
 					},
 				},
@@ -80,14 +80,14 @@ func Test_interceptor_evaluateRules(t *testing.T) {
 			allowAssertion: assert.False,
 		},
 		{
-			name:  "one policy rule when unknown match type with subject",
+			name:  "one policy rule when unknown requirement type with subject",
 			input: Input{Subject: &Subject{}},
 			rules: guard.Rules{
 				{
 					AuthenticatedAccess: &guard.AuthenticatedAccess{
 						PolicyBased: &guard.PolicyBased{
-							Policies: []string{"positive-policy"},
-							Match:    guard.Match(-1),
+							Policies:    []string{"positive-policy"},
+							Requirement: guard.Requirement(-1),
 						},
 					},
 				},
@@ -152,26 +152,26 @@ func Test_interceptor_evaluateRule(t *testing.T) {
 			allowAssertion: assert.True,
 		},
 		{
-			name:  "role based access with no match",
+			name:  "role based access with no requirement",
 			input: Input{Subject: &Subject{Roles: []string{"user"}}},
 			rule: &guard.Rule{
 				AuthenticatedAccess: &guard.AuthenticatedAccess{
 					RoleBased: &guard.RoleBased{
-						Roles: []string{"admin"},
-						Match: guard.MatchAll,
+						Roles:       []string{"admin"},
+						Requirement: guard.RequirementAll,
 					},
 				},
 			},
 			allowAssertion: assert.False,
 		},
 		{
-			name:  "role based access with match",
+			name:  "role based access with requirement",
 			input: Input{Subject: &Subject{Roles: []string{"admin"}}},
 			rule: &guard.Rule{
 				AuthenticatedAccess: &guard.AuthenticatedAccess{
 					RoleBased: &guard.RoleBased{
-						Roles: []string{"admin"},
-						Match: guard.MatchAtLeastOne,
+						Roles:       []string{"admin"},
+						Requirement: guard.RequirementAtLeastOne,
 					},
 				},
 			},
@@ -194,13 +194,13 @@ func Test_interceptor_evaluateRule(t *testing.T) {
 			allowAssertion: assert.False,
 		},
 		{
-			name:  "policy based access with no match",
+			name:  "policy based access with no requirement",
 			input: Input{Subject: &Subject{}},
 			rule: &guard.Rule{
 				AuthenticatedAccess: &guard.AuthenticatedAccess{
 					PolicyBased: &guard.PolicyBased{
-						Policies: []string{"positive-policy"},
-						Match:    guard.MatchAll,
+						Policies:    []string{"positive-policy"},
+						Requirement: guard.RequirementAll,
 					},
 				},
 			},
@@ -212,13 +212,13 @@ func Test_interceptor_evaluateRule(t *testing.T) {
 			allowAssertion: assert.False,
 		},
 		{
-			name:  "policy based access with match",
+			name:  "policy based access with requirement",
 			input: Input{Subject: &Subject{}},
 			rule: &guard.Rule{
 				AuthenticatedAccess: &guard.AuthenticatedAccess{
 					PolicyBased: &guard.PolicyBased{
-						Policies: []string{"positive-policy"},
-						Match:    guard.MatchAll,
+						Policies:    []string{"positive-policy"},
+						Requirement: guard.RequirementAll,
 					},
 				},
 			},
@@ -230,13 +230,13 @@ func Test_interceptor_evaluateRule(t *testing.T) {
 			allowAssertion: assert.True,
 		},
 		{
-			name:  "policy based access with unknown match type",
+			name:  "policy based access with unknown requirement type",
 			input: Input{Subject: &Subject{}},
 			rule: &guard.Rule{
 				AuthenticatedAccess: &guard.AuthenticatedAccess{
 					PolicyBased: &guard.PolicyBased{
-						Policies: []string{"positive-policy"},
-						Match:    guard.Match(-1),
+						Policies:    []string{"positive-policy"},
+						Requirement: guard.Requirement(-1),
 					},
 				},
 			},
@@ -253,8 +253,8 @@ func Test_interceptor_evaluateRule(t *testing.T) {
 			rule: &guard.Rule{
 				AuthenticatedAccess: &guard.AuthenticatedAccess{
 					PolicyBased: &guard.PolicyBased{
-						Policies: []string{"undefined-policy"},
-						Match:    guard.MatchAll,
+						Policies:    []string{"undefined-policy"},
+						Requirement: guard.RequirementAll,
 					},
 				},
 			},
@@ -269,8 +269,8 @@ func Test_interceptor_evaluateRule(t *testing.T) {
 			rule: &guard.Rule{
 				AuthenticatedAccess: &guard.AuthenticatedAccess{
 					PolicyBased: &guard.PolicyBased{
-						Policies: []string{"nil-policy"},
-						Match:    guard.MatchAll,
+						Policies:    []string{"nil-policy"},
+						Requirement: guard.RequirementAll,
 					},
 				},
 			},
@@ -304,7 +304,7 @@ func Test_interceptor_evaluateRoleBasedAccess(t *testing.T) {
 		name          string
 		requiredRoles []string
 		subjectRoles  []string
-		match         guard.Match
+		requirement   guard.Requirement
 
 		allowAssertion assert.BoolAssertionFunc
 		errAssertion   assert.ErrorAssertionFunc
@@ -320,38 +320,38 @@ func Test_interceptor_evaluateRoleBasedAccess(t *testing.T) {
 			allowAssertion: assert.False,
 		},
 		{
-			name:           "match all required roles",
+			name:           "requirement all required roles",
 			requiredRoles:  []string{"admin", "manager"},
 			subjectRoles:   []string{"admin", "manager"},
-			match:          guard.MatchAll,
+			requirement:    guard.RequirementAll,
 			allowAssertion: assert.True,
 		},
 		{
-			name:           "no match all required roles",
+			name:           "no requirement all required roles",
 			requiredRoles:  []string{"admin", "manager"},
 			subjectRoles:   []string{"admin"},
-			match:          guard.MatchAll,
+			requirement:    guard.RequirementAll,
 			allowAssertion: assert.False,
 		},
 		{
-			name:           "match at least one required roles",
+			name:           "requirement at least one required roles",
 			requiredRoles:  []string{"admin", "manager"},
 			subjectRoles:   []string{"user", "manager"},
-			match:          guard.MatchAtLeastOne,
+			requirement:    guard.RequirementAtLeastOne,
 			allowAssertion: assert.True,
 		},
 		{
-			name:           "no match at least one required roles",
+			name:           "no requirement at least one required roles",
 			requiredRoles:  []string{"admin", "manager"},
 			subjectRoles:   []string{},
-			match:          guard.MatchAtLeastOne,
+			requirement:    guard.RequirementAtLeastOne,
 			allowAssertion: assert.False,
 		},
 		{
-			name:          "unknown match type",
+			name:          "unknown requirement type",
 			requiredRoles: []string{"admin"},
 			subjectRoles:  []string{"admin"},
-			match:         guard.Match(-1),
+			requirement:   guard.Requirement(-1),
 			errAssertion:  assert.Error,
 		},
 	}
@@ -361,8 +361,8 @@ func Test_interceptor_evaluateRoleBasedAccess(t *testing.T) {
 			i := &Interceptor{}
 
 			roleBased := &guard.RoleBased{
-				Roles: tt.requiredRoles,
-				Match: tt.match,
+				Roles:       tt.requiredRoles,
+				Requirement: tt.requirement,
 			}
 
 			input := &Input{
@@ -388,7 +388,7 @@ func Test_interceptor_evaluatePolicyBasedAccess(t *testing.T) {
 		name             string
 		requiredPolicies []string
 		declaredPolicies Policies
-		match            guard.Match
+		requirement      guard.Requirement
 
 		allowAssertion assert.BoolAssertionFunc
 		errAssertion   assert.ErrorAssertionFunc
@@ -399,60 +399,60 @@ func Test_interceptor_evaluatePolicyBasedAccess(t *testing.T) {
 			allowAssertion:   assert.False,
 		},
 		{
-			name:             "match all required policies",
+			name:             "requirement all required policies",
 			requiredPolicies: []string{"positive-policy-1", "positive-policy-2"},
 			declaredPolicies: Policies{
 				"positive-policy-1": func(ctx context.Context, input *Input) (bool, error) { return true, nil },
 				"positive-policy-2": func(ctx context.Context, input *Input) (bool, error) { return true, nil },
 			},
-			match:          guard.MatchAll,
+			requirement:    guard.RequirementAll,
 			allowAssertion: assert.True,
 		},
 		{
-			name:             "no match all required policies",
+			name:             "no requirement all required policies",
 			requiredPolicies: []string{"positive-policy-1", "negative-policy-1"},
 			declaredPolicies: Policies{
 				"positive-policy-1": func(ctx context.Context, input *Input) (bool, error) { return true, nil },
 				"negative-policy-1": func(ctx context.Context, input *Input) (bool, error) { return false, nil },
 			},
-			match:          guard.MatchAll,
+			requirement:    guard.RequirementAll,
 			allowAssertion: assert.False,
 		},
 		{
-			name:             "match at least one required policies",
+			name:             "requirement at least one required policies",
 			requiredPolicies: []string{"negative-policy-1", "positive-policy-1"},
 			declaredPolicies: Policies{
 				"negative-policy-1": func(ctx context.Context, input *Input) (bool, error) { return false, nil },
 				"positive-policy-1": func(ctx context.Context, input *Input) (bool, error) { return true, nil },
 			},
-			match:          guard.MatchAtLeastOne,
+			requirement:    guard.RequirementAtLeastOne,
 			allowAssertion: assert.True,
 		},
 		{
-			name:             "no match at least one required policies",
+			name:             "no requirement at least one required policies",
 			requiredPolicies: []string{"negative-policy-1", "negative-policy-2"},
 			declaredPolicies: Policies{
 				"negative-policy-1": func(ctx context.Context, input *Input) (bool, error) { return false, nil },
 				"negative-policy-2": func(ctx context.Context, input *Input) (bool, error) { return false, nil },
 			},
-			match:          guard.MatchAtLeastOne,
+			requirement:    guard.RequirementAtLeastOne,
 			allowAssertion: assert.False,
 		},
 		{
-			name:             "unknown match type",
+			name:             "unknown requirement type",
 			requiredPolicies: []string{"positive-1", "positive-2"},
 			declaredPolicies: Policies{
 				"positive-1": func(ctx context.Context, input *Input) (bool, error) { return true, nil },
 				"positive-2": func(ctx context.Context, input *Input) (bool, error) { return true, nil },
 			},
-			match:        guard.Match(-1),
+			requirement:  guard.Requirement(-1),
 			errAssertion: assert.Error,
 		},
 		{
 			name:             "undefined policy",
 			requiredPolicies: []string{"undefined-policy"},
 			declaredPolicies: Policies{},
-			match:            guard.Match(-1),
+			requirement:      guard.Requirement(-1),
 			errAssertion: func(t assert.TestingT, err error, _ ...interface{}) bool {
 				return assert.ErrorIs(t, err, ErrUndefinedPolicy)
 			},
@@ -461,7 +461,7 @@ func Test_interceptor_evaluatePolicyBasedAccess(t *testing.T) {
 			name:             "nil policy",
 			requiredPolicies: []string{"undefined-policy"},
 			declaredPolicies: Policies{},
-			match:            guard.Match(-1),
+			requirement:      guard.Requirement(-1),
 			errAssertion: func(t assert.TestingT, err error, _ ...interface{}) bool {
 				return assert.ErrorIs(t, err, ErrUndefinedPolicy)
 			},
@@ -473,7 +473,7 @@ func Test_interceptor_evaluatePolicyBasedAccess(t *testing.T) {
 				"positive-1": func(ctx context.Context, input *Input) (bool, error) { return false, errors.New("error") },
 				"positive-2": func(ctx context.Context, input *Input) (bool, error) { return true, nil },
 			},
-			match:        guard.MatchAll,
+			requirement:  guard.RequirementAll,
 			errAssertion: assert.Error,
 		},
 	}
@@ -485,8 +485,8 @@ func Test_interceptor_evaluatePolicyBasedAccess(t *testing.T) {
 			}
 
 			policyBased := &guard.PolicyBased{
-				Policies: tt.requiredPolicies,
-				Match:    tt.match,
+				Policies:    tt.requiredPolicies,
+				Requirement: tt.requirement,
 			}
 
 			allowed, err := i.evaluatePolicyBasedAccess(context.Background(), policyBased, &Input{})

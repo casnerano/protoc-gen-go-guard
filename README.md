@@ -57,7 +57,7 @@ service Auth {
       authenticated_access: {
         policy_based: {
           policies: ["demo-period", "premium"],
-          match: AT_LEAST_ONE
+          requirement: AT_LEAST_ONE
         }
       }
     };
@@ -69,7 +69,7 @@ service Auth {
       authenticated_access: {
         role_based: {
           roles: ["user", "verified"],
-          match: ALL
+          requirement: ALL
         }
       }
     };
