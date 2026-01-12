@@ -2,7 +2,6 @@
 
 Guard gRPC driven by Protobuf contract rules.
 
-
 [![GitHub Release](https://img.shields.io/github/v/release/casnerano/protoc-gen-go-guard?color=green)](https://github.com/casnerano/protoc-gen-go-guard/releases/latest)
 [![Go Report Card](https://goreportcard.com/badge/github.com/casnerano/protoc-gen-go-guard)](https://goreportcard.com/report/github.com/casnerano/protoc-gen-go-guard)
 [![GoDoc](https://pkg.go.dev/badge/github.com/casnerano/protoc-gen-go-guard)](https://godoc.org/github.com/casnerano/protoc-gen-go-guard)
@@ -10,12 +9,12 @@ Guard gRPC driven by Protobuf contract rules.
 
 ## Features
 
-- Define Guard rules directly in `.proto` files.
+- Define access rules directly in `.proto` files.
 - Support for public, authenticated, role-based, and policy-based access
 - Service-level and method-level rule inheritance.
 - Zero-trust by default (deny all unless explicitly allowed).
-- Simple interceptor: Easy to plug into any gRPC server.
-- No runtime reflection: Fast and efficient.
+- Simple interceptor: easy to plug into any gRPC server.
+- No runtime reflection: fast and efficient.
 
 ## Installation
 
@@ -24,13 +23,16 @@ Guard gRPC driven by Protobuf contract rules.
 go install github.com/casnerano/protoc-gen-go-guard/cmd/protoc-gen-go-guard@latest
 ```
 
-2. Add to your build system (example for buf):
-```yaml
-# buf.yaml
-plugins:
-  - name: guard
-    out: .
-    path: protoc-gen-go-guard
+2. Add to your build system: for example using `protoc` directly:
+```bash
+protoc \
+  --proto_path=. \
+  \
+  --plugin=protoc-gen-go-guard=bin/protoc-gen-go-guard \
+  --go-guard_out=. \
+  --go-guard_opt=paths=source_relative \
+  \
+  your_service.proto
 ```
 
 ## Usage
@@ -51,7 +53,7 @@ service Auth {
     option (guard.method_rules) = { require_authentication: true };
   }
 
-  // Overrides service rules — requires passed at least one policy.
+  // Overrides service rules: requirement passed at least one policies.
   rpc UpdateProfileStatus(google.protobuf.Empty) returns (google.protobuf.Empty) {
     option (guard.method_rules) = {
       authenticated_access: {
@@ -63,7 +65,7 @@ service Auth {
     };
   }
 
-  // Overrides service rules — requires all specified roles.
+  // Overrides service rules: requirement to have all roles.
   rpc DeleteProfile(google.protobuf.Empty) returns (google.protobuf.Empty) {
     option (guard.method_rules) = {
       authenticated_access: {
@@ -79,18 +81,25 @@ service Auth {
 
 ### 2. Configure interceptor
 ```go
-guardInterceptor := interceptor.New(
-    createSubjectResolver(),
-    interceptor.WithPolicies(buildPolicies()),
-    interceptor.WithDebug(),
-)
+func main() {
+	guard := interceptor.New(
+		createSubjectResolver(),
+		interceptor.WithPolicies(buildPolicies()),
+		interceptor.WithDebug(),
+	)
 
-server := grpc.NewServer(
-    grpc.UnaryInterceptor(
-        guardInterceptor.Unary(),
-    ),
-)
+	server := grpc.NewServer(
+		grpc.UnaryInterceptor(guard.Unary()),
+		grpc.StreamInterceptor(guard.Stream()),
+	)
+	
+	// register services ...
+}
 
+// SubjectResolver is a function that extracts a Subject from the request context.
+// If the user is unauthenticated, it should return (nil, nil).
+//
+// For example, extract roles from context metadata.
 func createSubjectResolver() interceptor.SubjectResolver {
 	return func(ctx context.Context) (*interceptor.Subject, error) {
 		md, ok := metadata.FromIncomingContext(ctx)
@@ -109,14 +118,16 @@ func createSubjectResolver() interceptor.SubjectResolver {
 
 func buildPolicies() interceptor.Policies {
 	return interceptor.Policies{
-		"demo-period": func(ctx context.Context, input *interceptor.Input) (bool, error) {
-			// check demo period with input
+		"active-subscription": func(ctx context.Context, input *interceptor.Input) (bool, error) {
+			// Check if active subscription for current subject.
 			return true, nil
-		},
-		"premium": func(ctx context.Context, input *interceptor.Input) (bool, error) {
-			// check premium with input
-			return false, nil
 		},
 	}
 }
 ```
+
+### Rule inheritance hierarchy
+Rules are evaluated in this order of precedence:
+- **Method rules** — override service rules for specific methods.
+- **Service rules** — apply to all methods in the service unless overridden.
+- **Default rules** — apply when no other rules exist (configurable via interceptor, zero trust by default).
