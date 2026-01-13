@@ -20,7 +20,7 @@ import (
 	desc "github.com/casnerano/protoc-gen-go-guard/proto"
 	"google.golang.org/protobuf/compiler/protogen"
 	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/types/descriptorpb"
+	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
 const (
@@ -70,7 +70,7 @@ func Execute(plugin *protogen.Plugin) error {
 			continue
 		}
 
-		services := collectServices(file.Services)
+		services := collectServices(file.Desc.Services())
 		if len(services) == 0 {
 			continue
 		}
@@ -104,14 +104,16 @@ func Execute(plugin *protogen.Plugin) error {
 
 // collectServices converts protobuf service descriptors into internal guard.Service structs,
 // extracting explicitly defined service-level rules and method-level rules.
-func collectServices(protoServices []*protogen.Service) []*guard.Service {
+func collectServices(protoServices protoreflect.ServiceDescriptors) []*guard.Service {
 	var services []*guard.Service
-	for _, protoService := range protoServices {
+	for i := 0; i < protoServices.Len(); i++ {
+		protoService := protoServices.Get(i)
+
 		service := guard.Service{
-			Name: string(protoService.Desc.Name()),
+			Name: string(protoService.Name()),
 		}
 
-		if options := protoService.Desc.Options().(*descriptorpb.ServiceOptions); options != nil {
+		if options := protoService.Options(); options != nil {
 			if pbRules, ok := proto.GetExtension(options, desc.E_ServiceRules).([]*desc.Rule); ok {
 				service.Rules = make([]*guard.Rule, 0, len(pbRules))
 				for _, pbRule := range pbRules {
@@ -120,7 +122,7 @@ func collectServices(protoServices []*protogen.Service) []*guard.Service {
 			}
 		}
 
-		if methods := collectMethods(protoService.Methods); len(methods) > 0 {
+		if methods := collectMethods(protoService.Methods()); len(methods) > 0 {
 			service.Methods = methods
 		}
 
@@ -136,18 +138,20 @@ func collectServices(protoServices []*protogen.Service) []*guard.Service {
 
 // collectMethods gathers method-level access rules from protobuf method options
 // and returns a map keyed by method name.
-func collectMethods(protoMethods []*protogen.Method) map[string]*guard.Method {
+func collectMethods(protoMethods protoreflect.MethodDescriptors) map[string]*guard.Method {
 	methods := make(map[string]*guard.Method)
 
-	for _, protoMethod := range protoMethods {
-		if options := protoMethod.Desc.Options().(*descriptorpb.MethodOptions); options != nil {
+	for i := 0; i < protoMethods.Len(); i++ {
+		protoMethod := protoMethods.Get(i)
+
+		if options := protoMethod.Options(); options != nil {
 			if pbRules, ok := proto.GetExtension(options, desc.E_MethodRules).([]*desc.Rule); ok {
 				guardRules := make([]*guard.Rule, 0, len(pbRules))
 				for _, pbRule := range pbRules {
 					guardRules = append(guardRules, extractRule(pbRule))
 				}
 
-				methods[string(protoMethod.Desc.Name())] = &guard.Method{
+				methods[string(protoMethod.Name())] = &guard.Method{
 					Rules: guardRules,
 				}
 			}
