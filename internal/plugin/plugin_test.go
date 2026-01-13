@@ -19,7 +19,7 @@ func Test_extractRule(t *testing.T) {
 		{
 			name:   "nil rule",
 			pbRule: nil,
-			want:   &guard.Rule{},
+			want:   nil,
 		},
 		{
 			name: "allow public rule",
@@ -217,7 +217,7 @@ func Test_extractRule(t *testing.T) {
 					AuthenticatedAccess: nil,
 				},
 			},
-			want: &guard.Rule{},
+			want: nil,
 		},
 	}
 
@@ -226,7 +226,7 @@ func Test_extractRule(t *testing.T) {
 			t.Parallel()
 
 			got := extractRule(tt.pbRule)
-			assert.Equal(t, tt.want, got)
+			assert.EqualValues(t, tt.want, got)
 		})
 	}
 }

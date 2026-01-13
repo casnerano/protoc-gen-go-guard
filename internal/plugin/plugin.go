@@ -79,7 +79,7 @@ func Execute(plugin *protogen.Plugin) error {
 			Meta: Meta{
 				ProtocVersion: func() string {
 					if ver := plugin.Request.CompilerVersion; ver != nil {
-						return fmt.Sprintf("v%d.%d.%d", ver.Major, ver.Minor, ver.Patch)
+						return fmt.Sprintf("v%d.%d.%d", *ver.Major, *ver.Minor, *ver.Patch)
 					}
 					return "(unknown)"
 				}(),
@@ -114,10 +114,12 @@ func collectServices(protoServices protoreflect.ServiceDescriptors) []*guard.Ser
 		}
 
 		if options := protoService.Options(); options != nil {
-			if pbRules, ok := proto.GetExtension(options, desc.E_ServiceRules).([]*desc.Rule); ok {
+			if pbRules, ok := proto.GetExtension(options, desc.E_ServiceRules).([]*desc.Rule); ok && len(pbRules) > 0 {
 				service.Rules = make([]*guard.Rule, 0, len(pbRules))
 				for _, pbRule := range pbRules {
-					service.Rules = append(service.Rules, extractRule(pbRule))
+					if rules := extractRule(pbRule); rules != nil {
+						service.Rules = append(service.Rules, rules)
+					}
 				}
 			}
 		}
@@ -145,10 +147,12 @@ func collectMethods(protoMethods protoreflect.MethodDescriptors) map[string]*gua
 		protoMethod := protoMethods.Get(i)
 
 		if options := protoMethod.Options(); options != nil {
-			if pbRules, ok := proto.GetExtension(options, desc.E_MethodRules).([]*desc.Rule); ok {
+			if pbRules, ok := proto.GetExtension(options, desc.E_MethodRules).([]*desc.Rule); ok && len(pbRules) > 0 {
 				guardRules := make([]*guard.Rule, 0, len(pbRules))
 				for _, pbRule := range pbRules {
-					guardRules = append(guardRules, extractRule(pbRule))
+					if rules := extractRule(pbRule); rules != nil {
+						guardRules = append(guardRules, rules)
+					}
 				}
 
 				methods[string(protoMethod.Name())] = &guard.Method{
@@ -163,18 +167,20 @@ func collectMethods(protoMethods protoreflect.MethodDescriptors) map[string]*gua
 
 // extractRule translates a protobuf-defined Rule message into the internal guard.Rule representation.
 func extractRule(pbRule *desc.Rule) *guard.Rule {
-	rule := guard.Rule{}
-
 	if pbRule == nil {
-		return &rule
+		return nil
 	}
 
 	switch mode := pbRule.Mode.(type) {
 	case *desc.Rule_AllowPublic:
-		rule.AllowPublic = &mode.AllowPublic
+		return &guard.Rule{
+			AllowPublic: &mode.AllowPublic,
+		}
 
 	case *desc.Rule_RequireAuthentication:
-		rule.RequireAuthentication = &mode.RequireAuthentication
+		return &guard.Rule{
+			RequireAuthentication: &mode.RequireAuthentication,
+		}
 
 	case *desc.Rule_AuthenticatedAccess:
 		if mode.AuthenticatedAccess != nil {
@@ -202,11 +208,13 @@ func extractRule(pbRule *desc.Rule) *guard.Rule {
 				}
 			}
 
-			rule.AuthenticatedAccess = authenticatedAccess
+			return &guard.Rule{
+				AuthenticatedAccess: authenticatedAccess,
+			}
 		}
 	}
 
-	return &rule
+	return nil
 }
 
 // parseTemplate loads and parses the embedded Go template used to generate .guard.go files.
