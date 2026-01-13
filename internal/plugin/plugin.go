@@ -161,6 +161,10 @@ func collectMethods(protoMethods []*protogen.Method) map[string]*guard.Method {
 func extractRule(pbRule *desc.Rule) *guard.Rule {
 	rule := guard.Rule{}
 
+	if pbRule == nil {
+		return &rule
+	}
+
 	switch mode := pbRule.Mode.(type) {
 	case *desc.Rule_AllowPublic:
 		rule.AllowPublic = &mode.AllowPublic
