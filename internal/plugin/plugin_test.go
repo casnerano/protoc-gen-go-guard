@@ -230,7 +230,7 @@ func Test_extractRule(t *testing.T) {
 			t.Parallel()
 
 			got := extractRule(tt.pbRule)
-			assert.EqualValues(t, tt.want, got)
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }
@@ -506,7 +506,7 @@ func Test_collectMethods(t *testing.T) {
 
 			serviceDescs := testCreateServiceDescriptors([]*guard.Service{tt.service})
 			got := collectMethods(serviceDescs.Get(0).Methods())
-			assert.EqualValues(t, tt.want, got)
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }
@@ -740,7 +740,7 @@ func Test_collectServices(t *testing.T) {
 
 			serviceDescs := testCreateServiceDescriptors(tt.services)
 			got := collectServices(serviceDescs)
-			assert.EqualValues(t, tt.want, got)
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }
