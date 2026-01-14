@@ -20,7 +20,7 @@ import (
 	desc "github.com/casnerano/protoc-gen-go-guard/proto"
 	"google.golang.org/protobuf/compiler/protogen"
 	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/types/descriptorpb"
+	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
 const (
@@ -70,7 +70,7 @@ func Execute(plugin *protogen.Plugin) error {
 			continue
 		}
 
-		services := collectServices(file.Services)
+		services := collectServices(file.Desc.Services())
 		if len(services) == 0 {
 			continue
 		}
@@ -79,7 +79,7 @@ func Execute(plugin *protogen.Plugin) error {
 			Meta: Meta{
 				ProtocVersion: func() string {
 					if ver := plugin.Request.CompilerVersion; ver != nil {
-						return fmt.Sprintf("v%d.%d.%d", ver.Major, ver.Minor, ver.Patch)
+						return fmt.Sprintf("v%d.%d.%d", *ver.Major, *ver.Minor, *ver.Patch)
 					}
 					return "(unknown)"
 				}(),
@@ -104,23 +104,27 @@ func Execute(plugin *protogen.Plugin) error {
 
 // collectServices converts protobuf service descriptors into internal guard.Service structs,
 // extracting explicitly defined service-level rules and method-level rules.
-func collectServices(protoServices []*protogen.Service) []*guard.Service {
+func collectServices(protoServices protoreflect.ServiceDescriptors) []*guard.Service {
 	var services []*guard.Service
-	for _, protoService := range protoServices {
+	for i := 0; i < protoServices.Len(); i++ {
+		protoService := protoServices.Get(i)
+
 		service := guard.Service{
-			Name: string(protoService.Desc.Name()),
+			Name: string(protoService.Name()),
 		}
 
-		if options := protoService.Desc.Options().(*descriptorpb.ServiceOptions); options != nil {
-			if pbRules, ok := proto.GetExtension(options, desc.E_ServiceRules).([]*desc.Rule); ok {
+		if options := protoService.Options(); options != nil {
+			if pbRules, ok := proto.GetExtension(options, desc.E_ServiceRules).([]*desc.Rule); ok && len(pbRules) > 0 {
 				service.Rules = make([]*guard.Rule, 0, len(pbRules))
 				for _, pbRule := range pbRules {
-					service.Rules = append(service.Rules, extractRule(pbRule))
+					if rules := extractRule(pbRule); rules != nil {
+						service.Rules = append(service.Rules, rules)
+					}
 				}
 			}
 		}
 
-		if methods := collectMethods(protoService.Methods); len(methods) > 0 {
+		if methods := collectMethods(protoService.Methods()); len(methods) > 0 {
 			service.Methods = methods
 		}
 
@@ -136,18 +140,22 @@ func collectServices(protoServices []*protogen.Service) []*guard.Service {
 
 // collectMethods gathers method-level access rules from protobuf method options
 // and returns a map keyed by method name.
-func collectMethods(protoMethods []*protogen.Method) map[string]*guard.Method {
+func collectMethods(protoMethods protoreflect.MethodDescriptors) map[string]*guard.Method {
 	methods := make(map[string]*guard.Method)
 
-	for _, protoMethod := range protoMethods {
-		if options := protoMethod.Desc.Options().(*descriptorpb.MethodOptions); options != nil {
-			if pbRules, ok := proto.GetExtension(options, desc.E_MethodRules).([]*desc.Rule); ok {
+	for i := 0; i < protoMethods.Len(); i++ {
+		protoMethod := protoMethods.Get(i)
+
+		if options := protoMethod.Options(); options != nil {
+			if pbRules, ok := proto.GetExtension(options, desc.E_MethodRules).([]*desc.Rule); ok && len(pbRules) > 0 {
 				guardRules := make([]*guard.Rule, 0, len(pbRules))
 				for _, pbRule := range pbRules {
-					guardRules = append(guardRules, extractRule(pbRule))
+					if rules := extractRule(pbRule); rules != nil {
+						guardRules = append(guardRules, rules)
+					}
 				}
 
-				methods[string(protoMethod.Desc.Name())] = &guard.Method{
+				methods[string(protoMethod.Name())] = &guard.Method{
 					Rules: guardRules,
 				}
 			}
@@ -159,14 +167,20 @@ func collectMethods(protoMethods []*protogen.Method) map[string]*guard.Method {
 
 // extractRule translates a protobuf-defined Rule message into the internal guard.Rule representation.
 func extractRule(pbRule *desc.Rule) *guard.Rule {
-	rule := guard.Rule{}
+	if pbRule == nil {
+		return nil
+	}
 
 	switch mode := pbRule.Mode.(type) {
 	case *desc.Rule_AllowPublic:
-		rule.AllowPublic = &mode.AllowPublic
+		return &guard.Rule{
+			AllowPublic: &mode.AllowPublic,
+		}
 
 	case *desc.Rule_RequireAuthentication:
-		rule.RequireAuthentication = &mode.RequireAuthentication
+		return &guard.Rule{
+			RequireAuthentication: &mode.RequireAuthentication,
+		}
 
 	case *desc.Rule_AuthenticatedAccess:
 		if mode.AuthenticatedAccess != nil {
@@ -194,11 +208,13 @@ func extractRule(pbRule *desc.Rule) *guard.Rule {
 				}
 			}
 
-			rule.AuthenticatedAccess = authenticatedAccess
+			return &guard.Rule{
+				AuthenticatedAccess: authenticatedAccess,
+			}
 		}
 	}
 
-	return &rule
+	return nil
 }
 
 // parseTemplate loads and parses the embedded Go template used to generate .guard.go files.
