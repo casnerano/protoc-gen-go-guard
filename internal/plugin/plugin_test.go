@@ -281,49 +281,59 @@ func testConvertGuardRuleToProtoRule(rule *guard.Rule) *desc.Rule {
 	return nil
 }
 
-func testCreateServiceDescriptor(service *guard.Service) protoreflect.ServiceDescriptor {
-	serviceMethods := make([]*descriptorpb.MethodDescriptorProto, 0, len(service.Methods))
-
-	for methodName, method := range service.Methods {
-		methodProto := &descriptorpb.MethodDescriptorProto{
-			Name:       proto.String(methodName),
-			InputType:  proto.String("test.Empty"),
-			OutputType: proto.String("test.Empty"),
-		}
-
-		if len(method.Rules) > 0 {
-			pbRules := make([]*desc.Rule, 0, len(method.Rules))
-			for _, rule := range method.Rules {
-				if pbRule := testConvertGuardRuleToProtoRule(rule); pbRule != nil {
-					pbRules = append(pbRules, pbRule)
-				}
-			}
-			if len(pbRules) > 0 {
-				opts := &descriptorpb.MethodOptions{}
-				proto.SetExtension(opts, desc.E_MethodRules, pbRules)
-				methodProto.Options = opts
-			}
-		}
-
-		serviceMethods = append(serviceMethods, methodProto)
-	}
-
+func testCreateServiceDescriptors(services []*guard.Service) protoreflect.ServiceDescriptors {
 	messageDesc := &descriptorpb.DescriptorProto{
 		Name: proto.String("Empty"),
 	}
 
-	serviceOptions := &descriptorpb.ServiceOptions{}
-	if len(service.Rules) > 0 {
-		pbRules := make([]*desc.Rule, 0, len(service.Rules))
-		for _, rule := range service.Rules {
-			if pbRule := testConvertGuardRuleToProtoRule(rule); pbRule != nil {
-				pbRules = append(pbRules, pbRule)
+	serviceProtos := make([]*descriptorpb.ServiceDescriptorProto, 0, len(services))
+	for _, service := range services {
+		serviceMethods := make([]*descriptorpb.MethodDescriptorProto, 0, len(service.Methods))
+
+		for methodName, method := range service.Methods {
+			methodProto := &descriptorpb.MethodDescriptorProto{
+				Name:       proto.String(methodName),
+				InputType:  proto.String("test.Empty"),
+				OutputType: proto.String("test.Empty"),
+			}
+
+			if len(method.Rules) > 0 {
+				pbRules := make([]*desc.Rule, 0, len(method.Rules))
+				for _, rule := range method.Rules {
+					if pbRule := testConvertGuardRuleToProtoRule(rule); pbRule != nil {
+						pbRules = append(pbRules, pbRule)
+					}
+				}
+
+				if len(pbRules) > 0 {
+					opts := &descriptorpb.MethodOptions{}
+					proto.SetExtension(opts, desc.E_MethodRules, pbRules)
+					methodProto.Options = opts
+				}
+			}
+
+			serviceMethods = append(serviceMethods, methodProto)
+		}
+
+		serviceOptions := &descriptorpb.ServiceOptions{}
+		if len(service.Rules) > 0 {
+			pbRules := make([]*desc.Rule, 0, len(service.Rules))
+			for _, rule := range service.Rules {
+				if pbRule := testConvertGuardRuleToProtoRule(rule); pbRule != nil {
+					pbRules = append(pbRules, pbRule)
+				}
+			}
+
+			if len(pbRules) > 0 {
+				proto.SetExtension(serviceOptions, desc.E_ServiceRules, pbRules)
 			}
 		}
 
-		if len(pbRules) > 0 {
-			proto.SetExtension(serviceOptions, desc.E_ServiceRules, pbRules)
-		}
+		serviceProtos = append(serviceProtos, &descriptorpb.ServiceDescriptorProto{
+			Name:    proto.String(service.Name),
+			Method:  serviceMethods,
+			Options: serviceOptions,
+		})
 	}
 
 	fileDesc := &descriptorpb.FileDescriptorProto{
@@ -331,13 +341,7 @@ func testCreateServiceDescriptor(service *guard.Service) protoreflect.ServiceDes
 		Package:     proto.String("test"),
 		Syntax:      proto.String("proto3"),
 		MessageType: []*descriptorpb.DescriptorProto{messageDesc},
-		Service: []*descriptorpb.ServiceDescriptorProto{
-			{
-				Name:    proto.String(service.Name),
-				Method:  serviceMethods,
-				Options: serviceOptions,
-			},
-		},
+		Service:     serviceProtos,
 	}
 
 	fd, err := protodesc.NewFile(fileDesc, nil)
@@ -345,7 +349,7 @@ func testCreateServiceDescriptor(service *guard.Service) protoreflect.ServiceDes
 		panic(err)
 	}
 
-	return fd.Services().Get(0)
+	return fd.Services()
 }
 
 func Test_collectMethods(t *testing.T) {
@@ -500,8 +504,242 @@ func Test_collectMethods(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			serviceDesc := testCreateServiceDescriptor(tt.service)
-			got := collectMethods(serviceDesc.Methods())
+			serviceDescs := testCreateServiceDescriptors([]*guard.Service{tt.service})
+			got := collectMethods(serviceDescs.Get(0).Methods())
+			assert.EqualValues(t, tt.want, got)
+		})
+	}
+}
+
+func Test_collectServices(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name     string
+		services []*guard.Service
+		want     []*guard.Service
+	}{
+		{
+			name:     "empty services",
+			services: []*guard.Service{},
+			want:     nil,
+		},
+		{
+			name: "services without rules",
+			services: []*guard.Service{
+				{
+					Name:    "Service1",
+					Rules:   nil,
+					Methods: map[string]*guard.Method{},
+				},
+				{
+					Name:    "Service2",
+					Rules:   guard.Rules{},
+					Methods: map[string]*guard.Method{},
+				},
+			},
+			want: nil,
+		},
+		{
+			name: "service with service-level rules only",
+			services: []*guard.Service{
+				{
+					Name: "Service1",
+					Rules: guard.Rules{
+						{AllowPublic: guard.Ptr(true)},
+					},
+					Methods: map[string]*guard.Method{},
+				},
+			},
+			want: []*guard.Service{
+				{
+					Name: "Service1",
+					Rules: guard.Rules{
+						{AllowPublic: guard.Ptr(true)},
+					},
+					Methods: nil,
+				},
+			},
+		},
+		{
+			name: "service with method-level rules only",
+			services: []*guard.Service{
+				{
+					Name:  "Service1",
+					Rules: nil,
+					Methods: map[string]*guard.Method{
+						"Method1": {
+							Rules: guard.Rules{
+								{RequireAuthentication: guard.Ptr(true)},
+							},
+						},
+					},
+				},
+			},
+			want: []*guard.Service{
+				{
+					Name:  "Service1",
+					Rules: nil,
+					Methods: map[string]*guard.Method{
+						"Method1": {
+							Rules: guard.Rules{
+								{RequireAuthentication: guard.Ptr(true)},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "service with both service-level and method-level rules",
+			services: []*guard.Service{
+				{
+					Name: "Service1",
+					Rules: guard.Rules{
+						{AllowPublic: guard.Ptr(true)},
+					},
+					Methods: map[string]*guard.Method{
+						"Method1": {
+							Rules: guard.Rules{
+								{RequireAuthentication: guard.Ptr(true)},
+							},
+						},
+					},
+				},
+			},
+			want: []*guard.Service{
+				{
+					Name: "Service1",
+					Rules: guard.Rules{
+						{AllowPublic: guard.Ptr(true)},
+					},
+					Methods: map[string]*guard.Method{
+						"Method1": {
+							Rules: guard.Rules{
+								{RequireAuthentication: guard.Ptr(true)},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "multiple services with different rules",
+			services: []*guard.Service{
+				{
+					Name: "Service1",
+					Rules: guard.Rules{
+						{AllowPublic: guard.Ptr(true)},
+					},
+					Methods: map[string]*guard.Method{},
+				},
+				{
+					Name:  "Service2",
+					Rules: nil,
+					Methods: map[string]*guard.Method{
+						"Method1": {
+							Rules: guard.Rules{
+								{RequireAuthentication: guard.Ptr(true)},
+							},
+						},
+					},
+				},
+				{
+					Name: "Service3",
+					Rules: guard.Rules{
+						{RequireAuthentication: guard.Ptr(true)},
+					},
+					Methods: map[string]*guard.Method{
+						"Method1": {
+							Rules: guard.Rules{
+								{AllowPublic: guard.Ptr(true)},
+							},
+						},
+					},
+				},
+				{
+					Name:    "Service4",
+					Rules:   nil,
+					Methods: map[string]*guard.Method{},
+				},
+			},
+			want: []*guard.Service{
+				{
+					Name: "Service1",
+					Rules: guard.Rules{
+						{AllowPublic: guard.Ptr(true)},
+					},
+					Methods: nil,
+				},
+				{
+					Name:  "Service2",
+					Rules: nil,
+					Methods: map[string]*guard.Method{
+						"Method1": {
+							Rules: guard.Rules{
+								{RequireAuthentication: guard.Ptr(true)},
+							},
+						},
+					},
+				},
+				{
+					Name: "Service3",
+					Rules: guard.Rules{
+						{RequireAuthentication: guard.Ptr(true)},
+					},
+					Methods: map[string]*guard.Method{
+						"Method1": {
+							Rules: guard.Rules{
+								{AllowPublic: guard.Ptr(true)},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "service with authenticated access rules",
+			services: []*guard.Service{
+				{
+					Name: "Service1",
+					Rules: guard.Rules{
+						{
+							AuthenticatedAccess: &guard.AuthenticatedAccess{
+								RoleBased: &guard.RoleBased{
+									Roles:       []string{"role1", "role2"},
+									Requirement: guard.RequirementAll,
+								},
+							},
+						},
+					},
+					Methods: map[string]*guard.Method{},
+				},
+			},
+			want: []*guard.Service{
+				{
+					Name: "Service1",
+					Rules: guard.Rules{
+						{
+							AuthenticatedAccess: &guard.AuthenticatedAccess{
+								RoleBased: &guard.RoleBased{
+									Roles:       []string{"role1", "role2"},
+									Requirement: guard.RequirementAll,
+								},
+							},
+						},
+					},
+					Methods: nil,
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			serviceDescs := testCreateServiceDescriptors(tt.services)
+			got := collectServices(serviceDescs)
 			assert.EqualValues(t, tt.want, got)
 		})
 	}
