@@ -4,8 +4,8 @@ Guard gRPC driven by Protobuf contract rules.
 
 [![GitHub Release](https://img.shields.io/github/v/release/casnerano/protoc-gen-go-guard?color=green)](https://github.com/casnerano/protoc-gen-go-guard/releases/latest)
 [![Go Report Card](https://goreportcard.com/badge/github.com/casnerano/protoc-gen-go-guard)](https://goreportcard.com/report/github.com/casnerano/protoc-gen-go-guard)
-[![GoDoc](https://pkg.go.dev/badge/github.com/casnerano/protoc-gen-go-guard)](https://godoc.org/github.com/casnerano/protoc-gen-go-guard)
 [![Coverage](https://coveralls.io/repos/casnerano/protoc-gen-go-guard/badge.svg)](https://coveralls.io/r/casnerano/protoc-gen-go-guard)
+[![GoDoc](https://pkg.go.dev/badge/github.com/casnerano/protoc-gen-go-guard)](https://godoc.org/github.com/casnerano/protoc-gen-go-guard)
 
 ## Features
 
