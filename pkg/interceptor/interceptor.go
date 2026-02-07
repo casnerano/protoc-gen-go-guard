@@ -52,14 +52,14 @@ type (
 )
 
 // RuleKind identifies which access rule was evaluated (allowed or denied).
-type RuleKind int
+type RuleKind string
 
 const (
-	RuleKindPublic        RuleKind = iota + 1 // AllowPublic — public access.
-	RuleKindAuthenticated                     // RequireAuthentication — requires authentication.
-	RuleKindRoleBased                         // AuthenticatedAccess.RoleBased — role-based.
-	RuleKindPolicyBased                       // AuthenticatedAccess.PolicyBased — policy-based.
-	RuleKindPrivate                           // no rule matched — service is private.
+	RuleKindPublic        RuleKind = "public"        // AllowPublic — public access.
+	RuleKindAuthenticated RuleKind = "authenticated" // RequireAuthentication — requires authentication.
+	RuleKindRoleBased     RuleKind = "role-based"    // AuthenticatedAccess.RoleBased — role-based.
+	RuleKindPolicyBased   RuleKind = "policy-based"  // AuthenticatedAccess.PolicyBased — policy-based.
+	RuleKindPrivate       RuleKind = "private"       // no rule matched — service is private.
 )
 
 // EvaluationResult is the result of access rule evaluation.
@@ -142,7 +142,7 @@ func (i *Interceptor) authorize(ctx context.Context, server any, fullMethod stri
 
 	if !result.Allowed {
 		if i.debug {
-			log.Printf("Access denied for %s", fullMethod)
+			log.Printf("Access denied for %s: rule=%s details=%v", fullMethod, result.Rule, result.Details)
 		}
 
 		if i.eventHandlers.OnAccessDenied != nil {
@@ -153,7 +153,7 @@ func (i *Interceptor) authorize(ctx context.Context, server any, fullMethod stri
 	}
 
 	if i.debug {
-		log.Printf("Access granted for %s", fullMethod)
+		log.Printf("Access granted for %s: rule=%s details=%v", fullMethod, result.Rule, result.Details)
 	}
 
 	return nil
