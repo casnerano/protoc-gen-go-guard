@@ -40,7 +40,7 @@ type TemplateData struct {
 
 // Meta contains version information used in the generated file header.
 type Meta struct {
-	ModuleVersion string // Version of protoc-gen-go-guard.
+	PluginVersion string // Version of protoc-gen-go-guard.
 	ProtocVersion string // Version of the protoc compiler used.
 }
 
@@ -83,7 +83,7 @@ func Execute(plugin *protogen.Plugin) error {
 					}
 					return "(unknown)"
 				}(),
-				ModuleVersion: "(unknown)",
+				PluginVersion: "(unknown)",
 			},
 			File: File{
 				Name:    filepath.Base(file.GeneratedFilenamePrefix),
