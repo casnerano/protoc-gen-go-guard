@@ -51,11 +51,29 @@ type (
 	Policies map[string]Policy
 )
 
+// RuleKind identifies which access rule was evaluated (allowed or denied).
+type RuleKind string
+
+const (
+	RuleKindPublic        RuleKind = "public"        // AllowPublic — public access.
+	RuleKindAuthenticated RuleKind = "authenticated" // RequireAuthentication — requires authentication.
+	RuleKindRoleBased     RuleKind = "role-based"    // AuthenticatedAccess.RoleBased — role-based.
+	RuleKindPolicyBased   RuleKind = "policy-based"  // AuthenticatedAccess.PolicyBased — policy-based.
+	RuleKindPrivate       RuleKind = "private"       // no rule matched — service is private.
+)
+
+// EvaluationResult is the result of access rule evaluation.
+type EvaluationResult struct {
+	Allowed bool
+	Rule    RuleKind
+	Details []string
+}
+
 type (
 	// OnErrorHandler is called when an error occurs during subject resolution or rule evaluation.
 	OnErrorHandler func(ctx context.Context, input *Input, err error)
 	// OnAccessDeniedHandler is called when access is denied by guard rules.
-	OnAccessDeniedHandler func(ctx context.Context, input *Input)
+	OnAccessDeniedHandler func(ctx context.Context, input *Input, result *EvaluationResult)
 
 	EventHandlers struct {
 		OnError        OnErrorHandler
@@ -109,7 +127,7 @@ func (i *Interceptor) authorize(ctx context.Context, server any, fullMethod stri
 
 	rules := i.getRules(server, fullMethod)
 
-	allowed, err := i.evaluateRules(ctx, rules, &input)
+	result, err := i.evaluateRules(ctx, rules, &input)
 	if err != nil {
 		if i.debug {
 			log.Printf("Evaluation error for %s: %v", fullMethod, err)
@@ -122,20 +140,20 @@ func (i *Interceptor) authorize(ctx context.Context, server any, fullMethod stri
 		return status.Error(codes.Internal, "evaluation error")
 	}
 
-	if !allowed {
+	if !result.Allowed {
 		if i.debug {
-			log.Printf("Access denied for %s", fullMethod)
+			log.Printf("Access denied for %s: rule=%s details=%v", fullMethod, result.Rule, result.Details)
 		}
 
 		if i.eventHandlers.OnAccessDenied != nil {
-			i.eventHandlers.OnAccessDenied(ctx, &input)
+			i.eventHandlers.OnAccessDenied(ctx, &input, result)
 		}
 
 		return status.Error(codes.PermissionDenied, codes.PermissionDenied.String())
 	}
 
 	if i.debug {
-		log.Printf("Access granted for %s", fullMethod)
+		log.Printf("Access granted for %s: rule=%s details=%v", fullMethod, result.Rule, result.Details)
 	}
 
 	return nil

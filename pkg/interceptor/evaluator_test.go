@@ -17,32 +17,32 @@ func Test_interceptor_evaluateRules(t *testing.T) {
 		rules    guard.Rules
 		policies Policies
 
-		allowAssertion assert.BoolAssertionFunc
-		errAssertion   assert.ErrorAssertionFunc
+		want       *EvaluationResult
+		errAssertion assert.ErrorAssertionFunc
 	}{
 		{
-			name:           "nil rules without subject",
-			rules:          nil,
-			allowAssertion: assert.False,
+			name: "nil rules without subject",
+			rules: nil,
+			want: &EvaluationResult{Allowed: false, Rule: RuleKindPrivate},
 		},
 		{
-			name:           "empty rules without subject",
-			rules:          guard.Rules{},
-			allowAssertion: assert.False,
+			name: "empty rules without subject",
+			rules: guard.Rules{},
+			want: &EvaluationResult{Allowed: false, Rule: RuleKindPrivate},
 		},
 		{
 			name: "one allow public rule without subject",
 			rules: guard.Rules{
 				{AllowPublic: guard.Ptr(true)},
 			},
-			allowAssertion: assert.True,
+			want: &EvaluationResult{Allowed: true, Rule: RuleKindPublic},
 		},
 		{
 			name: "one require authentication rule without subject",
 			rules: guard.Rules{
 				{RequireAuthentication: guard.Ptr(true)},
 			},
-			allowAssertion: assert.False,
+			want: &EvaluationResult{Allowed: false, Rule: RuleKindAuthenticated},
 		},
 		{
 			name:  "multiple rules when one allow rule with subject",
@@ -51,7 +51,7 @@ func Test_interceptor_evaluateRules(t *testing.T) {
 				{RequireAuthentication: guard.Ptr(true)},
 				{AllowPublic: guard.Ptr(false)},
 			},
-			allowAssertion: assert.True,
+			want: &EvaluationResult{Allowed: true, Rule: RuleKindAuthenticated},
 		},
 		{
 			name:  "multiple rules when not allow rules with subject",
@@ -77,7 +77,7 @@ func Test_interceptor_evaluateRules(t *testing.T) {
 			policies: Policies{"negative-policy": func(ctx context.Context, input *Input) (bool, error) {
 				return false, nil
 			}},
-			allowAssertion: assert.False,
+			want: &EvaluationResult{Allowed: false, Rule: RuleKindPolicyBased},
 		},
 		{
 			name:  "one policy rule when unknown requirement type with subject",
@@ -105,14 +105,16 @@ func Test_interceptor_evaluateRules(t *testing.T) {
 				policies: tt.policies,
 			}
 
-			allowed, err := i.evaluateRules(context.Background(), tt.rules, &tt.input)
+			result, err := i.evaluateRules(context.Background(), tt.rules, &tt.input)
 			if tt.errAssertion != nil {
 				tt.errAssertion(t, err)
 				return
 			}
 
 			require.NoError(t, err)
-			tt.allowAssertion(t, allowed)
+			require.NotNil(t, tt.want)
+			assert.Equal(t, tt.want.Allowed, result.Allowed)
+			assert.Equal(t, tt.want.Rule, result.Rule)
 		})
 	}
 }
@@ -124,32 +126,32 @@ func Test_interceptor_evaluateRule(t *testing.T) {
 		rule     *guard.Rule
 		policies Policies
 
-		allowAssertion assert.BoolAssertionFunc
-		errAssertion   assert.ErrorAssertionFunc
+		want         *EvaluationResult
+		errAssertion assert.ErrorAssertionFunc
 	}{
 		{
-			name:           "empty rule without subject",
-			input:          Input{},
-			rule:           &guard.Rule{},
-			allowAssertion: assert.False,
+			name: "empty rule without subject",
+			input: Input{},
+			rule:  &guard.Rule{},
+			want:  &EvaluationResult{Allowed: false, Rule: RuleKindPrivate},
 		},
 		{
-			name:           "allow public rule without subject",
-			input:          Input{},
-			rule:           &guard.Rule{AllowPublic: guard.Ptr(true)},
-			allowAssertion: assert.True,
+			name: "allow public rule without subject",
+			input: Input{},
+			rule:  &guard.Rule{AllowPublic: guard.Ptr(true)},
+			want:  &EvaluationResult{Allowed: true, Rule: RuleKindPublic},
 		},
 		{
-			name:           "require authentication without subject",
-			input:          Input{},
-			rule:           &guard.Rule{RequireAuthentication: guard.Ptr(true)},
-			allowAssertion: assert.False,
+			name: "require authentication without subject",
+			input: Input{},
+			rule:  &guard.Rule{RequireAuthentication: guard.Ptr(true)},
+			want:  &EvaluationResult{Allowed: false, Rule: RuleKindAuthenticated},
 		},
 		{
-			name:           "require authentication with subject",
-			input:          Input{Subject: &Subject{}},
-			rule:           &guard.Rule{RequireAuthentication: guard.Ptr(true)},
-			allowAssertion: assert.True,
+			name: "require authentication with subject",
+			input: Input{Subject: &Subject{}},
+			rule:  &guard.Rule{RequireAuthentication: guard.Ptr(true)},
+			want:  &EvaluationResult{Allowed: true, Rule: RuleKindAuthenticated},
 		},
 		{
 			name:  "role based access with no requirement",
@@ -162,7 +164,7 @@ func Test_interceptor_evaluateRule(t *testing.T) {
 					},
 				},
 			},
-			allowAssertion: assert.False,
+			want: &EvaluationResult{Allowed: false, Rule: RuleKindRoleBased},
 		},
 		{
 			name:  "role based access with requirement",
@@ -175,7 +177,7 @@ func Test_interceptor_evaluateRule(t *testing.T) {
 					},
 				},
 			},
-			allowAssertion: assert.True,
+			want: &EvaluationResult{Allowed: true, Rule: RuleKindRoleBased},
 		},
 		{
 			name:  "authenticated access with empty authenticated-rules and without subject",
@@ -183,7 +185,7 @@ func Test_interceptor_evaluateRule(t *testing.T) {
 			rule: &guard.Rule{
 				AuthenticatedAccess: &guard.AuthenticatedAccess{},
 			},
-			allowAssertion: assert.False,
+			want: &EvaluationResult{Allowed: false, Rule: RuleKindAuthenticated},
 		},
 		{
 			name:  "authenticated access with empty authenticated-rules and with subject",
@@ -191,7 +193,7 @@ func Test_interceptor_evaluateRule(t *testing.T) {
 			rule: &guard.Rule{
 				AuthenticatedAccess: &guard.AuthenticatedAccess{},
 			},
-			allowAssertion: assert.False,
+			want: &EvaluationResult{Allowed: false, Rule: RuleKindPrivate},
 		},
 		{
 			name:  "policy based access with no requirement",
@@ -209,7 +211,7 @@ func Test_interceptor_evaluateRule(t *testing.T) {
 					return false, nil
 				},
 			},
-			allowAssertion: assert.False,
+			want: &EvaluationResult{Allowed: false, Rule: RuleKindPolicyBased},
 		},
 		{
 			name:  "policy based access with requirement",
@@ -227,7 +229,7 @@ func Test_interceptor_evaluateRule(t *testing.T) {
 					return true, nil
 				},
 			},
-			allowAssertion: assert.True,
+			want: &EvaluationResult{Allowed: true, Rule: RuleKindPolicyBased},
 		},
 		{
 			name:  "policy based access with unknown requirement type",
@@ -287,14 +289,16 @@ func Test_interceptor_evaluateRule(t *testing.T) {
 				policies: tt.policies,
 			}
 
-			allowed, err := i.evaluateRule(context.Background(), tt.rule, &tt.input)
+			result, err := i.evaluateRule(context.Background(), tt.rule, &tt.input)
 			if tt.errAssertion != nil {
 				tt.errAssertion(t, err)
 				return
 			}
 
 			require.NoError(t, err)
-			tt.allowAssertion(t, allowed)
+			require.NotNil(t, tt.want)
+			assert.Equal(t, tt.want.Allowed, result.Allowed)
+			assert.Equal(t, tt.want.Rule, result.Rule)
 		})
 	}
 }
