@@ -9,7 +9,9 @@ package interceptor
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"strings"
 
 	"github.com/casnerano/protoc-gen-go-guard/pkg/guard"
 	"google.golang.org/grpc"
@@ -55,11 +57,11 @@ type (
 type RuleKind string
 
 const (
-	RuleKindPublic        RuleKind = "public"        // AllowPublic — public access.
-	RuleKindAuthenticated RuleKind = "authenticated" // RequireAuthentication — requires authentication.
-	RuleKindRoleBased     RuleKind = "role-based"    // AuthenticatedAccess.RoleBased — role-based.
-	RuleKindPolicyBased   RuleKind = "policy-based"  // AuthenticatedAccess.PolicyBased — policy-based.
-	RuleKindPrivate       RuleKind = "private"       // no rule matched — service is private.
+	RuleKindPublic        RuleKind = "public"
+	RuleKindAuthenticated RuleKind = "authenticated"
+	RuleKindRoleBased     RuleKind = "role-based"
+	RuleKindPolicyBased   RuleKind = "policy-based"
+	RuleKindPrivate       RuleKind = "private"
 )
 
 // EvaluationResult is the result of access rule evaluation.
@@ -67,6 +69,15 @@ type EvaluationResult struct {
 	Allowed bool
 	Rule    RuleKind
 	Details []string
+}
+
+func (e EvaluationResult) String() string {
+	return fmt.Sprintf(
+		"allowed: %v, rule: %v, details: %v",
+		e.Allowed,
+		e.Rule,
+		strings.Join(e.Details, "; "),
+	)
 }
 
 type (
@@ -142,18 +153,22 @@ func (i *Interceptor) authorize(ctx context.Context, server any, fullMethod stri
 
 	if !result.Allowed {
 		if i.debug {
-			log.Printf("Access denied for %s: rule=%s details=%v", fullMethod, result.Rule, result.Details)
+			log.Printf("Access denied for %s: %s", fullMethod, result.String())
 		}
 
 		if i.eventHandlers.OnAccessDenied != nil {
 			i.eventHandlers.OnAccessDenied(ctx, &input, result)
 		}
 
+		if result.Rule == RuleKindAuthenticated {
+			return status.Error(codes.Unauthenticated, codes.Unauthenticated.String())
+		}
+
 		return status.Error(codes.PermissionDenied, codes.PermissionDenied.String())
 	}
 
 	if i.debug {
-		log.Printf("Access granted for %s: rule=%s details=%v", fullMethod, result.Rule, result.Details)
+		log.Printf("Access granted for %s: %s", fullMethod, result.String())
 	}
 
 	return nil

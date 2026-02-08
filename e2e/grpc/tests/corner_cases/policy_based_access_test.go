@@ -34,24 +34,24 @@ func (s *PolicyBasedAccessTestsSuite) SetupSuite() {
 
 func (s *PolicyBasedAccessTestsSuite) TestEmptyPoliciesWithAnyRequirement() {
 	testCases := []struct {
-		name      string
-		context   context.Context
-		canAccess bool
+		name         string
+		context      context.Context
+		expectedCode codes.Code
 	}{
 		{
-			name:      "access denied for authenticated and empty policies with at least one requirement",
-			context:   testContextWithSubject(interceptor.Subject{}),
-			canAccess: false,
+			name:         "access denied for authenticated and empty policies with at least one requirement",
+			context:      testContextWithSubject(interceptor.Subject{}),
+			expectedCode: codes.PermissionDenied,
 		},
 	}
 
 	for _, tt := range testCases {
 		s.Run(tt.name, func() {
 			_, err := s.client.EmptyPoliciesWithAnyRequirement(tt.context, &emptypb.Empty{})
-			if tt.canAccess {
+			if tt.expectedCode == codes.OK {
 				s.NoError(err)
 			} else {
-				s.Equal(codes.PermissionDenied.String(), status.Code(err).String())
+				s.Equal(tt.expectedCode, status.Code(err))
 			}
 		})
 	}
@@ -59,24 +59,24 @@ func (s *PolicyBasedAccessTestsSuite) TestEmptyPoliciesWithAnyRequirement() {
 
 func (s *PolicyBasedAccessTestsSuite) TestMultiplePoliciesWithAllRequirement() {
 	testCases := []struct {
-		name      string
-		context   context.Context
-		canAccess bool
+		name         string
+		context      context.Context
+		expectedCode codes.Code
 	}{
 		{
-			name:      "access denied for authenticated and not all policies passed",
-			context:   testContextWithSubject(interceptor.Subject{}),
-			canAccess: false,
+			name:         "access denied for authenticated and not all policies passed",
+			context:      testContextWithSubject(interceptor.Subject{}),
+			expectedCode: codes.PermissionDenied,
 		},
 	}
 
 	for _, tt := range testCases {
 		s.Run(tt.name, func() {
 			_, err := s.client.MultiplePoliciesWithAllRequirement(tt.context, &emptypb.Empty{})
-			if tt.canAccess {
+			if tt.expectedCode == codes.OK {
 				s.NoError(err)
 			} else {
-				s.Equal(codes.PermissionDenied.String(), status.Code(err).String())
+				s.Equal(tt.expectedCode, status.Code(err))
 			}
 		})
 	}
@@ -84,24 +84,24 @@ func (s *PolicyBasedAccessTestsSuite) TestMultiplePoliciesWithAllRequirement() {
 
 func (s *PolicyBasedAccessTestsSuite) TestMultiplePoliciesWithAnyRequirement() {
 	testCases := []struct {
-		name      string
-		context   context.Context
-		canAccess bool
+		name         string
+		context      context.Context
+		expectedCode codes.Code
 	}{
 		{
-			name:      "access denied for authenticated and not all policies passed",
-			context:   testContextWithSubject(interceptor.Subject{}),
-			canAccess: true,
+			name:         "access denied for authenticated and not all policies passed",
+			context:      testContextWithSubject(interceptor.Subject{}),
+			expectedCode: codes.OK,
 		},
 	}
 
 	for _, tt := range testCases {
 		s.Run(tt.name, func() {
 			_, err := s.client.MultiplePoliciesWithAnyRequirement(tt.context, &emptypb.Empty{})
-			if tt.canAccess {
+			if tt.expectedCode == codes.OK {
 				s.NoError(err)
 			} else {
-				s.Equal(codes.PermissionDenied.String(), status.Code(err).String())
+				s.Equal(tt.expectedCode, status.Code(err))
 			}
 		})
 	}
