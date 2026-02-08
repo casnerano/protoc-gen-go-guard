@@ -34,29 +34,29 @@ func (s *RoleBasedAccessServerTestSuite) SetupSuite() {
 
 func (s *RoleBasedAccessServerTestSuite) TestEmptyRolesWithAnyRequirement() {
 	testCases := []struct {
-		name      string
-		context   context.Context
-		canAccess bool
+		name         string
+		context      context.Context
+		expectedCode codes.Code
 	}{
 		{
-			name:      "access denied for unauthenticated",
-			context:   context.Background(),
-			canAccess: false,
+			name:         "access denied for unauthenticated",
+			context:      context.Background(),
+			expectedCode: codes.Unauthenticated,
 		},
 		{
-			name:      "access denied for authenticated and without roles",
-			context:   testContextWithSubject(interceptor.Subject{}),
-			canAccess: false,
+			name:         "access denied for authenticated and without roles",
+			context:      testContextWithSubject(interceptor.Subject{}),
+			expectedCode: codes.PermissionDenied,
 		},
 	}
 
 	for _, tt := range testCases {
 		s.Run(tt.name, func() {
 			_, err := s.client.EmptyRolesWithAnyRequirement(tt.context, &emptypb.Empty{})
-			if tt.canAccess {
+			if tt.expectedCode == codes.OK {
 				s.NoError(err)
 			} else {
-				s.Equal(codes.PermissionDenied.String(), status.Code(err).String())
+				s.Equal(tt.expectedCode, status.Code(err))
 			}
 		})
 	}
@@ -64,29 +64,29 @@ func (s *RoleBasedAccessServerTestSuite) TestEmptyRolesWithAnyRequirement() {
 
 func (s *RoleBasedAccessServerTestSuite) TestEmptyRolesWithAllRequirement() {
 	testCases := []struct {
-		name      string
-		context   context.Context
-		canAccess bool
+		name         string
+		context      context.Context
+		expectedCode codes.Code
 	}{
 		{
-			name:      "access denied for unauthenticated",
-			context:   context.Background(),
-			canAccess: false,
+			name:         "access denied for unauthenticated",
+			context:      context.Background(),
+			expectedCode: codes.Unauthenticated,
 		},
 		{
-			name:      "access denied for authenticated and without roles",
-			context:   testContextWithSubject(interceptor.Subject{}),
-			canAccess: false,
+			name:         "access denied for authenticated and without roles",
+			context:      testContextWithSubject(interceptor.Subject{}),
+			expectedCode: codes.PermissionDenied,
 		},
 	}
 
 	for _, tt := range testCases {
 		s.Run(tt.name, func() {
 			_, err := s.client.EmptyRolesWithAllRequirement(tt.context, &emptypb.Empty{})
-			if tt.canAccess {
+			if tt.expectedCode == codes.OK {
 				s.NoError(err)
 			} else {
-				s.Equal(codes.PermissionDenied.String(), status.Code(err).String())
+				s.Equal(tt.expectedCode, status.Code(err))
 			}
 		})
 	}
@@ -94,38 +94,38 @@ func (s *RoleBasedAccessServerTestSuite) TestEmptyRolesWithAllRequirement() {
 
 func (s *RoleBasedAccessServerTestSuite) TestMultipleRolesWithAnyRequirement() {
 	testCases := []struct {
-		name      string
-		context   context.Context
-		canAccess bool
+		name         string
+		context      context.Context
+		expectedCode codes.Code
 	}{
 		{
-			name:      "access denied for unauthenticated",
-			context:   context.Background(),
-			canAccess: false,
+			name:         "access denied for unauthenticated",
+			context:      context.Background(),
+			expectedCode: codes.Unauthenticated,
 		},
 		{
 			name: "access allowed with token and with one required role",
 			context: testContextWithSubject(interceptor.Subject{
 				Roles: []string{"admin"},
 			}),
-			canAccess: true,
+			expectedCode: codes.OK,
 		},
 		{
 			name: "access allowed with token and without required roles",
 			context: testContextWithSubject(interceptor.Subject{
 				Roles: []string{"non-exists-role"},
 			}),
-			canAccess: false,
+			expectedCode: codes.PermissionDenied,
 		},
 	}
 
 	for _, tt := range testCases {
 		s.Run(tt.name, func() {
 			_, err := s.client.MultipleRolesWithAnyRequirement(tt.context, &emptypb.Empty{})
-			if tt.canAccess {
+			if tt.expectedCode == codes.OK {
 				s.NoError(err)
 			} else {
-				s.Equal(codes.PermissionDenied.String(), status.Code(err).String())
+				s.Equal(tt.expectedCode, status.Code(err))
 			}
 		})
 	}
@@ -133,38 +133,38 @@ func (s *RoleBasedAccessServerTestSuite) TestMultipleRolesWithAnyRequirement() {
 
 func (s *RoleBasedAccessServerTestSuite) TestMultipleRolesWithAllRequirement() {
 	testCases := []struct {
-		name      string
-		context   context.Context
-		canAccess bool
+		name         string
+		context      context.Context
+		expectedCode codes.Code
 	}{
 		{
-			name:      "access denied for unauthenticated",
-			context:   context.Background(),
-			canAccess: false,
+			name:         "access denied for unauthenticated",
+			context:      context.Background(),
+			expectedCode: codes.Unauthenticated,
 		},
 		{
 			name: "access denied with token and with one required role",
 			context: testContextWithSubject(interceptor.Subject{
 				Roles: []string{"admin"},
 			}),
-			canAccess: false,
+			expectedCode: codes.PermissionDenied,
 		},
 		{
 			name: "access allowed with token and with all required roles",
 			context: testContextWithSubject(interceptor.Subject{
 				Roles: []string{"admin", "manager"},
 			}),
-			canAccess: true,
+			expectedCode: codes.OK,
 		},
 	}
 
 	for _, tt := range testCases {
 		s.Run(tt.name, func() {
 			_, err := s.client.MultipleRolesWithAllRequirement(tt.context, &emptypb.Empty{})
-			if tt.canAccess {
+			if tt.expectedCode == codes.OK {
 				s.NoError(err)
 			} else {
-				s.Equal(codes.PermissionDenied.String(), status.Code(err).String())
+				s.Equal(tt.expectedCode, status.Code(err))
 			}
 		})
 	}

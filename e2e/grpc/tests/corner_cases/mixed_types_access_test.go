@@ -34,28 +34,28 @@ func (s *MixedTypesAccessServerTestSuite) SetupSuite() {
 
 func (s *MixedTypesAccessServerTestSuite) TestOverrideWithAuthentication() {
 	testCases := []struct {
-		name      string
-		context   context.Context
-		canAccess bool
+		name         string
+		context      context.Context
+		expectedCode codes.Code
 	}{
 		{
-			name:      "access denied for unauthenticated",
-			context:   context.Background(),
-			canAccess: false,
+			name:         "access denied for unauthenticated",
+			context:      context.Background(),
+			expectedCode: codes.Unauthenticated,
 		},
 		{
-			name:      "access allowed for authenticated",
-			context:   testContextWithSubject(interceptor.Subject{}),
-			canAccess: true,
+			name:         "access allowed for authenticated",
+			context:      testContextWithSubject(interceptor.Subject{}),
+			expectedCode: codes.OK,
 		},
 	}
 	for _, tt := range testCases {
 		s.Run(tt.name, func() {
 			_, err := s.client.OverrideWithAuthentication(tt.context, &emptypb.Empty{})
-			if tt.canAccess {
+			if tt.expectedCode == codes.OK {
 				s.NoError(err)
 			} else {
-				s.Equal(codes.PermissionDenied.String(), status.Code(err).String())
+				s.Equal(tt.expectedCode, status.Code(err))
 			}
 		})
 	}
@@ -63,33 +63,33 @@ func (s *MixedTypesAccessServerTestSuite) TestOverrideWithAuthentication() {
 
 func (s *MixedTypesAccessServerTestSuite) TestOverrideWithRoles() {
 	testCases := []struct {
-		name      string
-		context   context.Context
-		canAccess bool
+		name         string
+		context      context.Context
+		expectedCode codes.Code
 	}{
 		{
-			name:      "access denied for unauthenticated",
-			context:   context.Background(),
-			canAccess: false,
+			name:         "access denied for unauthenticated",
+			context:      context.Background(),
+			expectedCode: codes.Unauthenticated,
 		},
 		{
-			name:      "access allowed for authenticated and with all necessary roles",
-			context:   testContextWithSubject(interceptor.Subject{Roles: []string{"admin"}}),
-			canAccess: true,
+			name:         "access allowed for authenticated and with all necessary roles",
+			context:      testContextWithSubject(interceptor.Subject{Roles: []string{"admin"}}),
+			expectedCode: codes.OK,
 		},
 		{
-			name:      "access allowed for authenticated and without necessary roles",
-			context:   testContextWithSubject(interceptor.Subject{Roles: []string{"user"}}),
-			canAccess: false,
+			name:         "access allowed for authenticated and without necessary roles",
+			context:      testContextWithSubject(interceptor.Subject{Roles: []string{"user"}}),
+			expectedCode: codes.PermissionDenied,
 		},
 	}
 	for _, tt := range testCases {
 		s.Run(tt.name, func() {
 			_, err := s.client.OverrideWithRoles(tt.context, &emptypb.Empty{})
-			if tt.canAccess {
+			if tt.expectedCode == codes.OK {
 				s.NoError(err)
 			} else {
-				s.Equal(codes.PermissionDenied.String(), status.Code(err).String())
+				s.Equal(tt.expectedCode, status.Code(err))
 			}
 		})
 	}
@@ -97,28 +97,28 @@ func (s *MixedTypesAccessServerTestSuite) TestOverrideWithRoles() {
 
 func (s *MixedTypesAccessServerTestSuite) TestOverrideWithPolicies() {
 	testCases := []struct {
-		name      string
-		context   context.Context
-		canAccess bool
+		name         string
+		context      context.Context
+		expectedCode codes.Code
 	}{
 		{
-			name:      "access denied for unauthenticated",
-			context:   context.Background(),
-			canAccess: false,
+			name:         "access denied for unauthenticated",
+			context:      context.Background(),
+			expectedCode: codes.Unauthenticated,
 		},
 		{
-			name:      "access allowed for authenticated and passed all necessary policies",
-			context:   testContextWithSubject(interceptor.Subject{}),
-			canAccess: true,
+			name:         "access allowed for authenticated and passed all necessary policies",
+			context:      testContextWithSubject(interceptor.Subject{}),
+			expectedCode: codes.OK,
 		},
 	}
 	for _, tt := range testCases {
 		s.Run(tt.name, func() {
 			_, err := s.client.OverrideWithPolicies(tt.context, &emptypb.Empty{})
-			if tt.canAccess {
+			if tt.expectedCode == codes.OK {
 				s.NoError(err)
 			} else {
-				s.Equal(codes.PermissionDenied.String(), status.Code(err).String())
+				s.Equal(tt.expectedCode, status.Code(err))
 			}
 		})
 	}

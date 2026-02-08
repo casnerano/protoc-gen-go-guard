@@ -34,29 +34,29 @@ func (s *DefaultRulesServerTestSuite) SetupSuite() {
 
 func (s *DefaultRulesServerTestSuite) TestGetOne() {
 	testCases := []struct {
-		name      string
-		context   context.Context
-		canAccess bool
+		name         string
+		context      context.Context
+		expectedCode codes.Code
 	}{
 		{
-			name:      "access denied for unauthenticated",
-			context:   context.Background(),
-			canAccess: false,
+			name:         "access denied for unauthenticated",
+			context:      context.Background(),
+			expectedCode: codes.PermissionDenied,
 		},
 		{
-			name:      "access denied for authenticated",
-			context:   testContextWithSubject(interceptor.Subject{}),
-			canAccess: false,
+			name:         "access denied for authenticated",
+			context:      testContextWithSubject(interceptor.Subject{}),
+			expectedCode: codes.PermissionDenied,
 		},
 	}
 
 	for _, tt := range testCases {
 		s.Run(tt.name, func() {
 			_, err := s.client.GetOne(tt.context, &emptypb.Empty{})
-			if tt.canAccess {
+			if tt.expectedCode == codes.OK {
 				s.NoError(err)
 			} else {
-				s.Equal(codes.PermissionDenied.String(), status.Code(err).String())
+				s.Equal(tt.expectedCode, status.Code(err))
 			}
 		})
 	}
@@ -81,29 +81,29 @@ func (s *EmptyServiceRulesServerTestSuite) SetupSuite() {
 
 func (s *EmptyServiceRulesServerTestSuite) TestGetOne() {
 	testCases := []struct {
-		name      string
-		context   context.Context
-		canAccess bool
+		name         string
+		context      context.Context
+		expectedCode codes.Code
 	}{
 		{
-			name:      "access denied for unauthenticated",
-			context:   context.Background(),
-			canAccess: false,
+			name:         "access denied for unauthenticated",
+			context:      context.Background(),
+			expectedCode: codes.PermissionDenied,
 		},
 		{
-			name:      "access denied for authenticated",
-			context:   testContextWithSubject(interceptor.Subject{}),
-			canAccess: false,
+			name:         "access denied for authenticated",
+			context:      testContextWithSubject(interceptor.Subject{}),
+			expectedCode: codes.PermissionDenied,
 		},
 	}
 
 	for _, tt := range testCases {
 		s.Run(tt.name, func() {
 			_, err := s.client.GetOne(tt.context, &emptypb.Empty{})
-			if tt.canAccess {
+			if tt.expectedCode == codes.OK {
 				s.NoError(err)
 			} else {
-				s.Equal(codes.PermissionDenied.String(), status.Code(err).String())
+				s.Equal(tt.expectedCode, status.Code(err))
 			}
 		})
 	}
@@ -128,29 +128,29 @@ func (s *EmptyMethodRulesServerTestSuite) SetupSuite() {
 
 func (s *EmptyMethodRulesServerTestSuite) TestGetOne() {
 	testCases := []struct {
-		name      string
-		context   context.Context
-		canAccess bool
+		name         string
+		context      context.Context
+		expectedCode codes.Code
 	}{
 		{
-			name:      "access denied for unauthenticated",
-			context:   context.Background(),
-			canAccess: false,
+			name:         "access denied for unauthenticated",
+			context:      context.Background(),
+			expectedCode: codes.PermissionDenied,
 		},
 		{
-			name:      "access denied for authenticated",
-			context:   testContextWithSubject(interceptor.Subject{}),
-			canAccess: false,
+			name:         "access denied for authenticated",
+			context:      testContextWithSubject(interceptor.Subject{}),
+			expectedCode: codes.PermissionDenied,
 		},
 	}
 
 	for _, tt := range testCases {
 		s.Run(tt.name, func() {
 			_, err := s.client.GetOne(tt.context, &emptypb.Empty{})
-			if tt.canAccess {
+			if tt.expectedCode == codes.OK {
 				s.NoError(err)
 			} else {
-				s.Equal(codes.PermissionDenied.String(), status.Code(err).String())
+				s.Equal(tt.expectedCode, status.Code(err))
 			}
 		})
 	}
@@ -175,29 +175,29 @@ func (s *EmptyServiceAndMethodRulesServerTestSuite) SetupSuite() {
 
 func (s *EmptyServiceAndMethodRulesServerTestSuite) TestGetOne() {
 	testCases := []struct {
-		name      string
-		context   context.Context
-		canAccess bool
+		name         string
+		context      context.Context
+		expectedCode codes.Code
 	}{
 		{
-			name:      "access denied for unauthenticated",
-			context:   context.Background(),
-			canAccess: false,
+			name:         "access denied for unauthenticated",
+			context:      context.Background(),
+			expectedCode: codes.PermissionDenied,
 		},
 		{
-			name:      "access denied for authenticated",
-			context:   testContextWithSubject(interceptor.Subject{}),
-			canAccess: false,
+			name:         "access denied for authenticated",
+			context:      testContextWithSubject(interceptor.Subject{}),
+			expectedCode: codes.PermissionDenied,
 		},
 	}
 
 	for _, tt := range testCases {
 		s.Run(tt.name, func() {
 			_, err := s.client.GetOne(tt.context, &emptypb.Empty{})
-			if tt.canAccess {
+			if tt.expectedCode == codes.OK {
 				s.NoError(err)
 			} else {
-				s.Equal(codes.PermissionDenied.String(), status.Code(err).String())
+				s.Equal(tt.expectedCode, status.Code(err))
 			}
 		})
 	}

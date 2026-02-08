@@ -55,11 +55,11 @@ type (
 type RuleKind string
 
 const (
-	RuleKindPublic        RuleKind = "public"        // AllowPublic — public access.
-	RuleKindAuthenticated RuleKind = "authenticated" // RequireAuthentication — requires authentication.
-	RuleKindRoleBased     RuleKind = "role-based"    // AuthenticatedAccess.RoleBased — role-based.
-	RuleKindPolicyBased   RuleKind = "policy-based"  // AuthenticatedAccess.PolicyBased — policy-based.
-	RuleKindPrivate       RuleKind = "private"       // no rule matched — service is private.
+	RuleKindPublic        RuleKind = "public"
+	RuleKindAuthenticated RuleKind = "authenticated"
+	RuleKindRoleBased     RuleKind = "role-based"
+	RuleKindPolicyBased   RuleKind = "policy-based"
+	RuleKindPrivate       RuleKind = "private"
 )
 
 // EvaluationResult is the result of access rule evaluation.
@@ -147,6 +147,10 @@ func (i *Interceptor) authorize(ctx context.Context, server any, fullMethod stri
 
 		if i.eventHandlers.OnAccessDenied != nil {
 			i.eventHandlers.OnAccessDenied(ctx, &input, result)
+		}
+
+		if result.Rule == RuleKindAuthenticated {
+			return status.Error(codes.Unauthenticated, codes.Unauthenticated.String())
 		}
 
 		return status.Error(codes.PermissionDenied, codes.PermissionDenied.String())

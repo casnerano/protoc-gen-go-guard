@@ -34,29 +34,29 @@ func (s *InheritAndOverrideOneServerTestSuite) SetupSuite() {
 
 func (s *InheritAndOverrideOneServerTestSuite) TestInheritedMethod() {
 	testCases := []struct {
-		name      string
-		context   context.Context
-		canAccess bool
+		name         string
+		context      context.Context
+		expectedCode codes.Code
 	}{
 		{
-			name:      "access denied for unauthenticated",
-			context:   context.Background(),
-			canAccess: false,
+			name:         "access denied for unauthenticated",
+			context:      context.Background(),
+			expectedCode: codes.PermissionDenied,
 		},
 		{
-			name:      "access denied for authenticated",
-			context:   testContextWithSubject(interceptor.Subject{}),
-			canAccess: false,
+			name:         "access denied for authenticated",
+			context:      testContextWithSubject(interceptor.Subject{}),
+			expectedCode: codes.PermissionDenied,
 		},
 	}
 
 	for _, tt := range testCases {
 		s.Run(tt.name, func() {
 			_, err := s.client.InheritedMethod(tt.context, &emptypb.Empty{})
-			if tt.canAccess {
+			if tt.expectedCode == codes.OK {
 				s.NoError(err)
 			} else {
-				s.Equal(codes.PermissionDenied.String(), status.Code(err).String())
+				s.Equal(tt.expectedCode, status.Code(err))
 			}
 		})
 	}
@@ -64,24 +64,24 @@ func (s *InheritAndOverrideOneServerTestSuite) TestInheritedMethod() {
 
 func (s *InheritAndOverrideOneServerTestSuite) TestOverriddenMethod() {
 	testCases := []struct {
-		name      string
-		context   context.Context
-		canAccess bool
+		name         string
+		context      context.Context
+		expectedCode codes.Code
 	}{
 		{
-			name:      "access allowed for unauthenticated",
-			context:   context.Background(),
-			canAccess: true,
+			name:         "access allowed for unauthenticated",
+			context:      context.Background(),
+			expectedCode: codes.OK,
 		},
 	}
 
 	for _, tt := range testCases {
 		s.Run(tt.name, func() {
 			_, err := s.client.OverriddenMethod(tt.context, &emptypb.Empty{})
-			if tt.canAccess {
+			if tt.expectedCode == codes.OK {
 				s.NoError(err)
 			} else {
-				s.Equal(codes.PermissionDenied.String(), status.Code(err).String())
+				s.Equal(tt.expectedCode, status.Code(err))
 			}
 		})
 	}
@@ -106,24 +106,24 @@ func (s *InheritAndOverrideTwoServerTestSuite) SetupSuite() {
 
 func (s *InheritAndOverrideTwoServerTestSuite) TestInheritedMethod() {
 	testCases := []struct {
-		name      string
-		context   context.Context
-		canAccess bool
+		name         string
+		context      context.Context
+		expectedCode codes.Code
 	}{
 		{
-			name:      "access allowed for unauthenticated",
-			context:   context.Background(),
-			canAccess: true,
+			name:         "access allowed for unauthenticated",
+			context:      context.Background(),
+			expectedCode: codes.OK,
 		},
 	}
 
 	for _, tt := range testCases {
 		s.Run(tt.name, func() {
 			_, err := s.client.InheritedMethod(tt.context, &emptypb.Empty{})
-			if tt.canAccess {
+			if tt.expectedCode == codes.OK {
 				s.NoError(err)
 			} else {
-				s.Equal(codes.PermissionDenied.String(), status.Code(err).String())
+				s.Equal(tt.expectedCode, status.Code(err))
 			}
 		})
 	}
@@ -131,29 +131,29 @@ func (s *InheritAndOverrideTwoServerTestSuite) TestInheritedMethod() {
 
 func (s *InheritAndOverrideTwoServerTestSuite) TestOverriddenMethod() {
 	testCases := []struct {
-		name      string
-		context   context.Context
-		canAccess bool
+		name         string
+		context      context.Context
+		expectedCode codes.Code
 	}{
 		{
-			name:      "access denied for unauthenticated",
-			context:   context.Background(),
-			canAccess: false,
+			name:         "access denied for unauthenticated",
+			context:      context.Background(),
+			expectedCode: codes.PermissionDenied,
 		},
 		{
-			name:      "access denied for authenticated",
-			context:   testContextWithSubject(interceptor.Subject{}),
-			canAccess: false,
+			name:         "access denied for authenticated",
+			context:      testContextWithSubject(interceptor.Subject{}),
+			expectedCode: codes.PermissionDenied,
 		},
 	}
 
 	for _, tt := range testCases {
 		s.Run(tt.name, func() {
 			_, err := s.client.OverriddenMethod(tt.context, &emptypb.Empty{})
-			if tt.canAccess {
+			if tt.expectedCode == codes.OK {
 				s.NoError(err)
 			} else {
-				s.Equal(codes.PermissionDenied.String(), status.Code(err).String())
+				s.Equal(tt.expectedCode, status.Code(err))
 			}
 		})
 	}
