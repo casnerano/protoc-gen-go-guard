@@ -59,7 +59,7 @@ type File struct {
 //
 // The output file is named <prefix>.guard.go and placed in the same package
 // as the generated gRPC code.
-func Execute(plugin *protogen.Plugin) error {
+func Execute(plugin *protogen.Plugin, meta Meta) error {
 	tmpl, err := parseTemplate()
 	if err != nil {
 		return err
@@ -76,15 +76,7 @@ func Execute(plugin *protogen.Plugin) error {
 		}
 
 		templateData := TemplateData{
-			Meta: Meta{
-				ProtocVersion: func() string {
-					if ver := plugin.Request.CompilerVersion; ver != nil {
-						return fmt.Sprintf("v%d.%d.%d", *ver.Major, *ver.Minor, *ver.Patch)
-					}
-					return "(unknown)"
-				}(),
-				PluginVersion: "(unknown)",
-			},
+			Meta: meta,
 			File: File{
 				Name:    filepath.Base(file.GeneratedFilenamePrefix),
 				Package: string(file.GoPackageName),
